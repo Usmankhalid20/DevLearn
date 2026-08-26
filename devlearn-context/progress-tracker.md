@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-- **Phase 03 — Core Learning & Task Tracking** (Planning & Specification)
+- **Phase 04 — Contributions, Streaks & Analytics** (Planning & Implementation)
 
 ## Current Goal
 
-- Finalize specification and implementation for Subject management, Manual learning session logging, Interactive live timer (start/pause/resume/save), Task management, and learning session association.
+- Implement the full grayscale contribution calendar visualization, streak calculation engine, learning distribution metrics, and interactive charts (Recharts).
 
 ## Completed
 
@@ -36,29 +36,38 @@
   - Synchronized Prisma client with PostgreSQL and pushed repository to GitHub.
 - Completed specification for **Phase 02 — Product Data Model & Authentication** (`featrues/02-data-model-and-auth.md`).
 - **Executed & Verified Phase 02**:
-  - Defined full Prisma relational database schema (12 models: `User`, `UserSession`, `VerificationToken`, `PasswordResetToken`, `UserSettings`, `Subject`, `Task`, `Goal`, `Resource`, `Course`, `LearningSession`, `ContributionDay`).
+  - Defined full Prisma relational database schema (12 models).
   - Implemented custom authentication backend with **Argon2id** password hashing and secure HTTP-only server-side session management.
-  - Implemented authentication endpoints (`/api/auth/register`, `/login`, `/logout`, `/me`, `/verify-email`, `/forgot-password`, `/reset-password`).
-  - Implemented authentication middleware (`requireAuth`) enforcing session validation.
   - Implemented frontend Auth Provider, React Query integration, and full auth pages (`/login`, `/register`, `/forgot-password`, `/reset-password`).
   - Built initial authenticated dashboard shell at `/dashboard`.
-  - Passed all backend unit and integration tests with Vitest (9/9 passed).
-  - Passed Next.js production build with static route generation.
+- Completed specification for **Phase 03 — Core Learning & Task Tracking** (`featrues/03-core-learning-and-tasks.md`).
+- **Executed & Verified Phase 03**:
+  - Implemented Subjects module (CRUD, user-scoped, dynamic categories).
+  - Implemented Tasks module (Create, toggle completion, subject association, filtering).
+  - Implemented Learning Sessions module (Duration tracking, notes, task association, auto-sync with `ContributionDay`).
+  - Implemented Resources bookmarking module.
+  - Built live interactive Timer widget with `localStorage` background persistence and session logging dialog.
+  - Built portal pages: `/learning`, `/tasks`, `/history`, `/resources`, and enhanced `/dashboard` with live queries.
+  - Passed all 16 Vitest API unit/integration tests and static route Next.js production build.
+- Completed specification for **Phase 04 — Contributions, Streaks & Analytics** (`featrues/04-contributions-and-analytics.md`).
+- Completed specification for **Phase 05 — Marketing Website & Settings** (`featrues/05-marketing-and-settings.md`).
 
 ## In Progress
 
-- Specification for **Phase 03 (Core Learning & Task Tracking)**.
+- Implementation for **Phase 04 (Contributions, Streaks & Analytics)**.
 
 ## Next Up
 
-1. **Phase 03 Specification & Execution**:
-   - Subjects Module (CRUD, user-scoped, dynamic categories).
-   - Learning Sessions Module (Manual entry, validation, topic, notes, resource URL).
-   - Timer Feature (Client/server timer flow: start, pause, resume, finish).
-   - Tasks Module (Create, mark complete, associate with sessions).
-2. **Subsequent Phases**:
-   - Phase 04: Contributions, Streaks & Analytics (Grayscale contribution graph, stats, charts).
-   - Phase 05: Marketing Website & Portal Polish.
+1. **Phase 04 Execution**:
+   - Contribution calendar API (`GET /api/contributions/calendar`).
+   - Analytics summary API (`GET /api/analytics/summary` - totals, streaks, subject distribution, 30-day activity).
+   - Frontend analytics view (`/analytics`) with Recharts graphs (Subject breakdown, daily learning trend).
+   - Interactive contribution calendar heatmap component with tooltip and monochrome levels.
+2. **Phase 05 Execution**:
+   - Marketing website landing page with interactive preview (`/`).
+   - Settings page (`/settings` - goal minutes, timezone).
+   - Final end-to-end verification.
+
 
 
 ## Open Questions

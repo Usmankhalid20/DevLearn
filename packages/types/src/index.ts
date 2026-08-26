@@ -51,6 +51,75 @@ export interface AuthSessionDto {
 }
 
 /**
+ * Subject DTO
+ */
+export interface SubjectDto {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string | null;
+  colorToken?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    learningSessions: number;
+    tasks: number;
+  };
+}
+
+/**
+ * Task DTO
+ */
+export interface TaskDto {
+  id: string;
+  userId: string;
+  subjectId?: string | null;
+  subject?: SubjectDto | null;
+  title: string;
+  description?: string | null;
+  isCompleted: boolean;
+  completedAt?: string | null;
+  dueDate?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Resource DTO
+ */
+export interface ResourceDto {
+  id: string;
+  userId: string;
+  title: string;
+  url: string;
+  type: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Learning Session DTO
+ */
+export interface LearningSessionDto {
+  id: string;
+  userId: string;
+  subjectId: string;
+  subject: SubjectDto;
+  taskId?: string | null;
+  task?: { id: string; title: string } | null;
+  resourceId?: string | null;
+  resource?: ResourceDto | null;
+  courseId?: string | null;
+  durationMinutes: number;
+  date: string;
+  topic?: string | null;
+  learnedNotes?: string | null;
+  generalNotes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
  * Contribution Level (Grayscale 0-4)
  */
 export type ContributionLevel = 0 | 1 | 2 | 3 | 4;
