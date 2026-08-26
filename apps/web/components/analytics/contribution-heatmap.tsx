@@ -23,27 +23,27 @@ export function ContributionHeatmap({
     queryFn: analyticsApi.getCalendar,
   });
 
-  const days = data?.days || [];
   const totalMinutes = data?.totalMinutesYear || 0;
   const totalHours = (totalMinutes / 60).toFixed(1);
   const activeDays = data?.totalActiveDays || 0;
 
   // Group 365 days into columns of 7 days (weeks)
   const weeks: ContributionDayDto[][] = React.useMemo(() => {
-    if (days.length === 0) return [];
+    const daysList = data?.days || [];
+    if (daysList.length === 0) return [];
     const result: ContributionDayDto[][] = [];
     let currentWeek: ContributionDayDto[] = [];
 
-    days.forEach((day, index) => {
+    daysList.forEach((day, index) => {
       currentWeek.push(day);
-      if (currentWeek.length === 7 || index === days.length - 1) {
+      if (currentWeek.length === 7 || index === daysList.length - 1) {
         result.push(currentWeek);
         currentWeek = [];
       }
     });
 
     return result;
-  }, [days]);
+  }, [data?.days]);
 
   const getLevelClass = (level: number) => {
     switch (level) {
