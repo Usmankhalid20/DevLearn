@@ -28,14 +28,26 @@ export interface HealthStatus {
 }
 
 /**
- * Core User entity preview (used across API & Web)
+ * Core User entity DTO
  */
-export interface UserSummaryDto {
+export interface UserDto {
   id: string;
   email: string;
-  name?: string | null;
+  name: string | null;
   isEmailVerified: boolean;
   createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserSettingsDto {
+  timezone: string;
+  dailyGoalMinutes: number;
+  theme: string;
+}
+
+export interface AuthSessionDto {
+  user: UserDto;
+  settings?: UserSettingsDto | null;
 }
 
 /**

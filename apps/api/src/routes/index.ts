@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import { healthRouter } from './health.routes.js';
+import { authRouter } from '../modules/auth/auth.routes.js';
 
 export const rootRouter = Router();
 
 // Mount system health
 rootRouter.use(healthRouter);
 
-// Domain modules (Auth, Learning, Tasks, Analytics, etc.) will be mounted here in Phase 02+
+// Mount authentication module
+rootRouter.use('/auth', authRouter);

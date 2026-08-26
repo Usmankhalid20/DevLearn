@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-- **Phase 02 — Product Data Model & Authentication** (Planning & Specification)
+- **Phase 03 — Core Learning & Task Tracking** (Planning & Specification)
 
 ## Current Goal
 
-- Finalize the domain data models (Users, Sessions, Subjects, Tasks, Goals, Resources, Courses, Contributions), Prisma schema, authentication flows (email/password, verification, password reset, session cookies), and API contract specifications.
+- Finalize specification and implementation for Subject management, Manual learning session logging, Interactive live timer (start/pause/resume/save), Task management, and learning session association.
 
 ## Completed
 
@@ -29,30 +29,37 @@
 - Completed specification for **Phase 01 — Design System & Project Foundation** (`featrues/01-system-design.md`).
 - **Executed & Verified Phase 01**:
   - Initialized monorepo workspace (`apps/web`, `apps/api`, `packages/ui`, `packages/config`, `packages/types`, `infrastructure/docker`).
-  - Implemented Docker Compose setup with PostgreSQL 16 and Redis 7 (configured and verified).
-  - Implemented Express.js API foundation with Helmet security headers, CORS, cookie-parser, structured Pino logging, centralized error handler, and `/health` monitoring endpoint.
+  - Implemented Docker Compose setup with PostgreSQL 16 and Redis 7.
+  - Implemented Express.js API foundation with Helmet, CORS, cookie-parser, structured Pino logging, centralized error handler, and `/health` monitoring endpoint.
   - Implemented Next.js 15 App Router web foundation with custom monochrome CSS variables (`--bg-base: #0D0D0D`, `--bg-surface: #151515`, `--border-default: #2A2A2A`, grayscale contribution levels 0–4).
   - Built reusable shadcn/ui primitives (`Button`, `Card`, `Badge`) and layout shell (`Sidebar`, `Header`, `MarketingLayout`, `PortalLayout`, `AuthLayout`).
-  - Synchronized Prisma client with PostgreSQL.
-  - Passed TypeScript typechecks, Vitest unit tests, and Next.js production builds.
-  - Git repository initialized and pushed to GitHub (`main` branch).
+  - Synchronized Prisma client with PostgreSQL and pushed repository to GitHub.
+- Completed specification for **Phase 02 — Product Data Model & Authentication** (`featrues/02-data-model-and-auth.md`).
+- **Executed & Verified Phase 02**:
+  - Defined full Prisma relational database schema (12 models: `User`, `UserSession`, `VerificationToken`, `PasswordResetToken`, `UserSettings`, `Subject`, `Task`, `Goal`, `Resource`, `Course`, `LearningSession`, `ContributionDay`).
+  - Implemented custom authentication backend with **Argon2id** password hashing and secure HTTP-only server-side session management.
+  - Implemented authentication endpoints (`/api/auth/register`, `/login`, `/logout`, `/me`, `/verify-email`, `/forgot-password`, `/reset-password`).
+  - Implemented authentication middleware (`requireAuth`) enforcing session validation.
+  - Implemented frontend Auth Provider, React Query integration, and full auth pages (`/login`, `/register`, `/forgot-password`, `/reset-password`).
+  - Built initial authenticated dashboard shell at `/dashboard`.
+  - Passed all backend unit and integration tests with Vitest (9/9 passed).
+  - Passed Next.js production build with static route generation.
 
 ## In Progress
 
-- Specification for **Phase 02 (Product Data Model & Authentication)**.
+- Specification for **Phase 03 (Core Learning & Task Tracking)**.
 
 ## Next Up
 
-1. **Phase 02 Specification & Execution**:
-   - Finalize domain and data model (User, Session, Subject, Task, Goal, Resource, Course, Contribution).
-   - Define PostgreSQL Prisma schema and run migrations.
-   - Implement authentication and session management (Argon2id/Scrypt, HTTP-only cookies, email verification, password reset).
-   - Implement API authentication endpoints & validation schemas.
-   - Implement frontend auth pages (`/login`, `/register`, `/verify-email`, `/reset-password`).
+1. **Phase 03 Specification & Execution**:
+   - Subjects Module (CRUD, user-scoped, dynamic categories).
+   - Learning Sessions Module (Manual entry, validation, topic, notes, resource URL).
+   - Timer Feature (Client/server timer flow: start, pause, resume, finish).
+   - Tasks Module (Create, mark complete, associate with sessions).
 2. **Subsequent Phases**:
-   - Phase 03: Core Learning & Task Tracking (Subjects, Sessions, Timer, Tasks).
    - Phase 04: Contributions, Streaks & Analytics (Grayscale contribution graph, stats, charts).
    - Phase 05: Marketing Website & Portal Polish.
+
 
 ## Open Questions
 
