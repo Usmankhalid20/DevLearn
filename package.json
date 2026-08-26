@@ -1,0 +1,32 @@
+{
+  "name": "devlearn",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DevLearn - Personal learning-progress SaaS application",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:api": "npm run dev --workspace=apps/api",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "docker:up": "docker compose -f infrastructure/docker/docker-compose.yml up -d",
+    "docker:down": "docker compose -f infrastructure/docker/docker-compose.yml down",
+    "prisma:generate": "npm run prisma:generate --workspace=apps/api"
+  },
+  "keywords": [
+    "learning-tracker",
+    "saas",
+    "developer-tools",
+    "typescript",
+    "nextjs",
+    "express"
+  ],
+  "author": "DevLearn Team",
+  "license": "UNLICENSED"
+}

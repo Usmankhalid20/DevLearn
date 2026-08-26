@@ -1,0 +1,17 @@
+// DevLearn Prisma Schema Foundation
+// Phase 01: Project Foundation
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Minimal health check model for database connectivity verification
+model HealthCheck {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+}

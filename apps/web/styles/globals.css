@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* DevLearn Monochrome Tokens - ui-context.md */
+    --bg-base: #0D0D0D;
+    --bg-surface: #151515;
+    --bg-surface-elevated: #1C1C1C;
+
+    --border-default: #2A2A2A;
+    --border-subtle: #202020;
+
+    --text-primary: #FFFFFF;
+    --text-secondary: #BDBDBD;
+    --text-muted: #808080;
+    --neutral-soft: #E0E0E0;
+
+    --accent-primary: #FFFFFF;
+
+    --state-error: #EF4444;
+    --state-warning: #F59E0B;
+    --state-success: #22C55E;
+
+    /* Contribution Grayscale Heatmap */
+    --contrib-0: #1A1A1A;
+    --contrib-1: #303030;
+    --contrib-2: #555555;
+    --contrib-3: #858585;
+    --contrib-4: #FFFFFF;
+
+    --font-sans: 'Geist Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  * {
+    border-color: var(--border-default);
+  }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
