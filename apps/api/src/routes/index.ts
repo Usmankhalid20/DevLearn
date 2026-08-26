@@ -10,20 +10,26 @@ import { analyticsRouter } from '../modules/analytics/analytics.routes.js';
 import { settingsRouter } from '../modules/settings/settings.routes.js';
 import { goalsRouter } from '../modules/goals/goals.routes.js';
 import { exportRouter } from '../modules/export/export.routes.js';
+import { coursesRouter } from '../modules/courses/courses.routes.js';
+import { achievementsRouter } from '../modules/achievements/achievements.routes.js';
+import { diagnosticsRouter } from '../modules/diagnostics/diagnostics.routes.js';
 
 export const rootRouter = Router();
 
-// Mount system health
+// Mount system health & diagnostics
 rootRouter.use(healthRouter);
+rootRouter.use('/system', diagnosticsRouter);
 
 // Mount domain modules
 rootRouter.use('/auth', authRouter);
 rootRouter.use('/subjects', subjectsRouter);
 rootRouter.use('/tasks', tasksRouter);
+rootRouter.use('/courses', coursesRouter);
 rootRouter.use('/learning-sessions', learningRouter);
 rootRouter.use('/resources', resourcesRouter);
 rootRouter.use('/contributions', contributionsRouter);
 rootRouter.use('/analytics', analyticsRouter);
+rootRouter.use('/achievements', achievementsRouter);
 rootRouter.use('/settings', settingsRouter);
 rootRouter.use('/goals', goalsRouter);
 rootRouter.use('/export', exportRouter);
