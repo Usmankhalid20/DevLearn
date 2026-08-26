@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-- **Phase 01 — Design System & Project Foundation** (Specification ready; moving to project foundation initialization)
+- **Phase 02 — Product Data Model & Authentication** (Planning & Specification)
 
 ## Current Goal
 
-- Initialize the production-ready repository structure, set up Docker local infrastructure (PostgreSQL & Redis), configure the Next.js frontend with the monochrome design system / shadcn/ui tokens, and set up the Express.js API backend foundation according to `01-system-design.md`.
+- Finalize the domain data models (Users, Sessions, Subjects, Tasks, Goals, Resources, Courses, Contributions), Prisma schema, authentication flows (email/password, verification, password reset, session cookies), and API contract specifications.
 
 ## Completed
 
@@ -27,28 +27,29 @@
 - Defined the learning contribution graph as the product's own GitHub-style activity visualization based on learning minutes.
 - Defined the MVP goal of remaining functional without paid third-party APIs/services.
 - Completed specification for **Phase 01 — Design System & Project Foundation** (`featrues/01-system-design.md`).
-- Defined monorepo layout (`apps/web`, `apps/api`, `packages/ui`, `packages/config`, `packages/types`, `infrastructure/docker`).
-- Defined design system tokens (`--bg-base`, `--bg-surface`, `--bg-elevated`, `--text-*`, `--border-*`, contribution levels 0–4).
+- **Executed & Verified Phase 01**:
+  - Initialized monorepo workspace (`apps/web`, `apps/api`, `packages/ui`, `packages/config`, `packages/types`, `infrastructure/docker`).
+  - Implemented Docker Compose setup with PostgreSQL 16 and Redis 7 (configured and verified).
+  - Implemented Express.js API foundation with Helmet security headers, CORS, cookie-parser, structured Pino logging, centralized error handler, and `/health` monitoring endpoint.
+  - Implemented Next.js 15 App Router web foundation with custom monochrome CSS variables (`--bg-base: #0D0D0D`, `--bg-surface: #151515`, `--border-default: #2A2A2A`, grayscale contribution levels 0–4).
+  - Built reusable shadcn/ui primitives (`Button`, `Card`, `Badge`) and layout shell (`Sidebar`, `Header`, `MarketingLayout`, `PortalLayout`, `AuthLayout`).
+  - Synchronized Prisma client with PostgreSQL.
+  - Passed TypeScript typechecks, Vitest unit tests, and Next.js production builds.
+  - Git repository initialized and pushed to GitHub (`main` branch).
 
 ## In Progress
 
-- Phase 01 implementation & verification (Repository setup, Docker Compose, Next.js web shell, Express API skeleton, design system foundation).
-- Specification for Phase 02 (Product Data Model & Authentication).
+- Specification for **Phase 02 (Product Data Model & Authentication)**.
 
 ## Next Up
 
-1. **Phase 01 Execution**:
-   - Initialize monorepo structure (`apps/web`, `apps/api`, packages, infrastructure).
-   - Configure Docker Compose for local PostgreSQL and Redis.
-   - Configure Express.js API with security middleware (Helmet, CORS, cookie-parser), logging (Pino), and health endpoint.
-   - Configure Next.js frontend with Tailwind CSS, design tokens, and base shadcn/ui setup.
-   - Verify Phase 01 completion criteria and checklist.
-2. **Phase 02 Specification & Execution**:
+1. **Phase 02 Specification & Execution**:
    - Finalize domain and data model (User, Session, Subject, Task, Goal, Resource, Course, Contribution).
-   - Define PostgreSQL Prisma schema and migrations.
-   - Define authentication and session management (Argon2id/Scrypt, HTTP-only cookies, verification, password reset).
-   - Define API contracts and validation schemas.
-3. **Subsequent Phases**:
+   - Define PostgreSQL Prisma schema and run migrations.
+   - Implement authentication and session management (Argon2id/Scrypt, HTTP-only cookies, email verification, password reset).
+   - Implement API authentication endpoints & validation schemas.
+   - Implement frontend auth pages (`/login`, `/register`, `/verify-email`, `/reset-password`).
+2. **Subsequent Phases**:
    - Phase 03: Core Learning & Task Tracking (Subjects, Sessions, Timer, Tasks).
    - Phase 04: Contributions, Streaks & Analytics (Grayscale contribution graph, stats, charts).
    - Phase 05: Marketing Website & Portal Polish.
