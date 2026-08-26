@@ -130,3 +130,36 @@ export interface ContributionDayDto {
   level: ContributionLevel;
   sessionCount: number;
 }
+
+export interface ContributionCalendarDto {
+  days: ContributionDayDto[];
+  totalActiveDays: number;
+  totalMinutesYear: number;
+}
+
+/**
+ * Analytics Summary DTO
+ */
+export interface SubjectDistributionDto {
+  subjectId: string;
+  subjectName: string;
+  totalMinutes: number;
+  percentage: number;
+}
+
+export interface DailyActivityTrendDto {
+  date: string;
+  minutes: number;
+  sessionCount: number;
+}
+
+export interface AnalyticsSummaryDto {
+  totalMinutes: number;
+  totalHours: number;
+  totalSessions: number;
+  currentStreak: number;
+  longestStreak: number;
+  averageSessionMinutes: number;
+  subjectDistribution: SubjectDistributionDto[];
+  dailyActivityTrend: DailyActivityTrendDto[];
+}

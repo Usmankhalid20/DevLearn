@@ -25,6 +25,7 @@ import {
   ArrowRight,
   BookOpen,
 } from 'lucide-react';
+import { ContributionHeatmap } from '@/components/analytics/contribution-heatmap';
 import { learningApi } from '@/lib/learning-api';
 
 export default function DashboardPage() {
@@ -179,6 +180,9 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Live Contribution Calendar Heatmap */}
+      <ContributionHeatmap />
 
       {/* Recent Sessions List */}
       <div className="space-y-4">

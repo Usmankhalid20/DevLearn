@@ -1,248 +1,315 @@
+'use client';
+
 import * as React from 'react';
 import Link from 'next/link';
 import {
-  Activity,
-  CheckCircle2,
+  ArrowRight,
   Clock,
-  Code2,
   Flame,
+  CheckCircle2,
+  BookOpen,
   Layers,
   ShieldCheck,
-  Terminal,
+  Zap,
+  Play,
+  RotateCcw,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 
-export default function HomePage() {
+export default function MarketingPage() {
+  // Interactive preview state for the hero demo
+  const [demoSeconds, setDemoSeconds] = React.useState(1500); // 25 min default
+  const [demoRunning, setDemoRunning] = React.useState(false);
+
+  React.useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (demoRunning) {
+      interval = setInterval(() => {
+        setDemoSeconds((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [demoRunning]);
+
+  const formatDemoTime = (secs: number) => {
+    const mins = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${String(mins).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
-        <div className="container mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
-          <div className="flex items-center space-x-2.5 font-mono font-bold text-white tracking-wider">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-black text-xs font-black">
+    <div className="flex flex-col min-h-screen bg-base text-foreground select-none">
+      {/* Top Navigation */}
+      <header className="sticky top-0 z-50 w-full border-b border-border bg-base/80 backdrop-blur-md">
+        <div className="container mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-7 w-7 items-center justify-center rounded bg-white text-black font-black font-mono text-xs">
               DL
             </div>
-            <span>DevLearn</span>
+            <span className="font-mono font-bold tracking-tight text-white text-lg">
+              DevLearn
+            </span>
           </div>
 
-          <div className="flex items-center space-x-3">
-            <Badge variant="secondary" className="font-mono text-[11px]">
-              Phase 01 — Foundation
-            </Badge>
-            <Link
-              href="https://github.com"
-              target="_blank"
-              className="text-xs font-mono text-foreground-secondary hover:text-white transition-colors"
-            >
-              Docs
+          <div className="flex items-center gap-3">
+            <Link href="/login">
+              <Button variant="ghost" size="sm" className="font-mono text-xs">
+                Log in
+              </Button>
+            </Link>
+            <Link href="/register">
+              <Button size="sm" className="font-mono text-xs">
+                Get Started
+              </Button>
             </Link>
           </div>
         </div>
       </header>
 
-      {/* Main Hero Section */}
-      <main className="flex-1 py-12 px-6 md:py-20">
-        <div className="container mx-auto max-w-6xl space-y-16">
-          {/* Hero Header */}
-          <div className="space-y-4 max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-1 text-xs font-mono text-foreground-secondary">
-              <span className="flex h-2 w-2 rounded-full bg-white" />
-              Minimal Monochrome Architecture Active
-            </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl font-mono">
-              Track what you learn. Measure your time. See your progress.
-            </h1>
-            <p className="text-base text-foreground-secondary leading-relaxed sm:text-lg">
-              DevLearn turns scattered learning activity across documentation, videos, courses,
-              and code into a measurable, verifiable learning history with custom grayscale activity heatmaps.
-            </p>
-          </div>
+      {/* Hero Section */}
+      <section className="container mx-auto max-w-6xl px-6 pt-20 pb-16 text-center space-y-8">
+        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs font-mono text-foreground-secondary">
+          <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+          Monochrome Learning-Progress Tracker for Developers
+        </div>
 
-          {/* Design System Token Showcase */}
-          <div className="space-y-6">
-            <div className="border-b border-border pb-2">
-              <h2 className="text-sm font-semibold uppercase tracking-wider font-mono text-white flex items-center gap-2">
-                <Layers className="h-4 w-4" />
-                Design System Foundation & Tokens
-              </h2>
-              <p className="text-xs text-foreground-secondary mt-1">
-                Monochrome palette, tonal surfaces, and grayscale contribution levels (Level 0–4).
-              </p>
+        <h1 className="mx-auto max-w-4xl text-4xl sm:text-6xl font-black font-mono tracking-tight text-white leading-tight">
+          Measure what you learn. <br />
+          <span className="text-neutral-400">Build developer momentum.</span>
+        </h1>
+
+        <p className="mx-auto max-w-2xl text-sm sm:text-base text-foreground-secondary leading-relaxed">
+          Stop wondering where your study hours went. DevLearn tracks actual focused minutes,
+          maintains your personal monochrome contribution calendar, and quantifies your skill mastery.
+        </p>
+
+        <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+          <Link href="/register">
+            <Button size="lg" className="gap-2 font-mono text-sm px-8 h-12">
+              Start Free Today
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Link href="/login">
+            <Button variant="outline" size="lg" className="font-mono text-sm h-12">
+              Sign In to Portal
+            </Button>
+          </Link>
+        </div>
+
+        {/* Live Interactive Product Preview */}
+        <div className="mx-auto max-w-4xl pt-10">
+          <div className="rounded-xl border border-border bg-surface p-6 shadow-2xl space-y-6 text-left">
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-3 rounded-full bg-neutral-800" />
+                <div className="h-3 w-3 rounded-full bg-neutral-800" />
+                <div className="h-3 w-3 rounded-full bg-neutral-800" />
+                <span className="ml-2 font-mono text-xs text-foreground-muted">
+                  devlearn.app / portal
+                </span>
+              </div>
+              <Badge variant="outline" className="font-mono text-[10px]">
+                Live Interactive Demo
+              </Badge>
             </div>
 
+            {/* Demo Body */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Token Surfaces */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-xs uppercase font-mono tracking-wider text-foreground-muted">
-                    Surfaces & Depth
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    Clean tonal contrast without bright branding
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="p-3 rounded border border-border bg-background flex items-center justify-between text-xs font-mono">
-                    <span className="text-foreground-secondary">--bg-base</span>
-                    <span className="text-white">#0D0D0D</span>
-                  </div>
-                  <div className="p-3 rounded border border-border bg-surface flex items-center justify-between text-xs font-mono">
-                    <span className="text-foreground-secondary">--bg-surface</span>
-                    <span className="text-white">#151515</span>
-                  </div>
-                  <div className="p-3 rounded border border-border bg-surface-elevated flex items-center justify-between text-xs font-mono">
-                    <span className="text-foreground-secondary">--bg-surface-elevated</span>
-                    <span className="text-white">#1C1C1C</span>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Mini Timer */}
+              <div className="rounded-lg border border-border bg-surface-elevated p-4 text-center space-y-3">
+                <span className="text-[11px] font-mono text-foreground-muted uppercase">
+                  Active Focus Session
+                </span>
+                <div className="font-mono text-3xl font-black text-white">
+                  {formatDemoTime(demoSeconds)}
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => setDemoRunning(!demoRunning)}
+                    className="h-8 text-xs font-mono"
+                  >
+                    {demoRunning ? 'Pause' : 'Start Focus'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setDemoRunning(false);
+                      setDemoSeconds(1500);
+                    }}
+                    className="h-8 text-xs font-mono text-foreground-muted"
+                  >
+                    Reset
+                  </Button>
+                </div>
+              </div>
 
-              {/* Contribution Grayscale Heatmap */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-xs uppercase font-mono tracking-wider text-foreground-muted">
-                    Contribution Heatmap
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    GitHub-style learning activity scale in grayscale
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="h-5 w-5 rounded-sm bg-contrib-0 border border-border" title="Level 0: #1A1A1A" />
-                    <div className="h-5 w-5 rounded-sm bg-contrib-1 border border-border" title="Level 1: #303030" />
-                    <div className="h-5 w-5 rounded-sm bg-contrib-2 border border-border" title="Level 2: #555555" />
-                    <div className="h-5 w-5 rounded-sm bg-contrib-3 border border-border" title="Level 3: #858585" />
-                    <div className="h-5 w-5 rounded-sm bg-contrib-4 border border-border" title="Level 4: #FFFFFF" />
-                  </div>
-                  <div className="text-[11px] font-mono text-foreground-secondary flex justify-between">
-                    <span>Less (0m)</span>
-                    <span>More (120m+)</span>
-                  </div>
-                  <div className="grid grid-cols-7 gap-1.5 pt-1">
-                    {Array.from({ length: 28 }).map((_, i) => {
-                      const level = (i % 5) as 0 | 1 | 2 | 3 | 4;
-                      const levelClass =
-                        level === 0
-                          ? 'bg-contrib-0'
-                          : level === 1
-                          ? 'bg-contrib-1'
-                          : level === 2
-                          ? 'bg-contrib-2'
+              {/* Mini Heatmap Demo */}
+              <div className="md:col-span-2 rounded-lg border border-border bg-surface-elevated p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-mono text-foreground-muted uppercase">
+                    365-Day Grayscale Heatmap
+                  </span>
+                  <span className="text-[10px] font-mono text-white">124 hours logged</span>
+                </div>
+
+                <div className="grid grid-cols-12 gap-1.5 pt-1">
+                  {[
+                    0, 1, 2, 4, 3, 2, 0, 1, 3, 4, 2, 1,
+                    1, 2, 3, 4, 4, 3, 2, 0, 1, 2, 3, 4,
+                    0, 0, 1, 2, 3, 4, 2, 1, 0, 3, 4, 2,
+                    1, 2, 4, 3, 2, 1, 0, 2, 4, 3, 1, 4,
+                  ].map((level, i) => (
+                    <div
+                      key={i}
+                      className={`h-4 w-full rounded-sm border ${
+                        level === 4
+                          ? 'bg-contrib-4 border-white'
                           : level === 3
-                          ? 'bg-contrib-3'
-                          : 'bg-contrib-4';
-                      return (
-                        <div
-                          key={i}
-                          className={`h-4 w-full rounded-sm border border-border/40 ${levelClass}`}
-                        />
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
+                          ? 'bg-contrib-3 border-neutral-400'
+                          : level === 2
+                          ? 'bg-contrib-2 border-neutral-600'
+                          : level === 1
+                          ? 'bg-contrib-1 border-neutral-700'
+                          : 'bg-contrib-0 border-border/30'
+                      }`}
+                    />
+                  ))}
+                </div>
 
-              {/* UI Primitives */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-xs uppercase font-mono tracking-wider text-foreground-muted">
-                    UI Primitives & States
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    Button variants, badges, and semantic states
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex flex-wrap gap-2">
-                    <Button size="sm" variant="default">Primary</Button>
-                    <Button size="sm" variant="secondary">Secondary</Button>
-                    <Button size="sm" variant="outline">Outline</Button>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    <Badge variant="default">Active</Badge>
-                    <Badge variant="secondary">Monochrome</Badge>
-                    <Badge variant="success">Success</Badge>
-                    <Badge variant="warning">Warning</Badge>
-                    <Badge variant="destructive">Error</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          {/* Foundation Architecture Status */}
-          <div className="space-y-4">
-            <div className="border-b border-border pb-2">
-              <h2 className="text-sm font-semibold uppercase tracking-wider font-mono text-white flex items-center gap-2">
-                <Terminal className="h-4 w-4" />
-                Phase 01 Verification Matrix
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="bg-surface">
-                <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-sm font-mono flex items-center gap-2 text-white">
-                    <CheckCircle2 className="h-4 w-4 text-white" />
-                    Frontend (Next.js)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0 text-xs text-foreground-secondary space-y-1">
-                  <p>• App Router & layout groups configured</p>
-                  <p>• Tailwind CSS tokens active</p>
-                  <p>• shadcn/ui base primitives ready</p>
-                  <p>• Lucide icon system configured</p>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-surface">
-                <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-sm font-mono flex items-center gap-2 text-white">
-                    <CheckCircle2 className="h-4 w-4 text-white" />
-                    Backend API (Express)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0 text-xs text-foreground-secondary space-y-1">
-                  <p>• Security middleware (Helmet, CORS, Cookies)</p>
-                  <p>• Structured logging (Pino)</p>
-                  <p>• Centralized error handler</p>
-                  <p>• Health status endpoint (/health)</p>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-surface">
-                <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-sm font-mono flex items-center gap-2 text-white">
-                    <CheckCircle2 className="h-4 w-4 text-white" />
-                    Local Infrastructure
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0 text-xs text-foreground-secondary space-y-1">
-                  <p>• Docker Compose (PostgreSQL 16 + Redis 7)</p>
-                  <p>• Prisma client foundation</p>
-                  <p>• Redis connection manager</p>
-                  <p>• Environment schema validation (Zod)</p>
-                </CardContent>
-              </Card>
+                <div className="flex items-center justify-between pt-1 text-[10px] font-mono text-foreground-muted">
+                  <span>Level 0 (0m)</span>
+                  <span>Level 4 (120m+)</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </main>
+      </section>
+
+      {/* Core Architectural Pillars */}
+      <section className="border-t border-border py-20 bg-surface/30">
+        <div className="container mx-auto max-w-6xl px-6 space-y-12">
+          <div className="text-center space-y-3">
+            <h2 className="text-2xl sm:text-3xl font-bold font-mono text-white">
+              Built for Developer Discipline
+            </h2>
+            <p className="text-xs sm:text-sm text-foreground-secondary max-w-xl mx-auto">
+              No bloated social feeds, no third-party vendor lock-in. Just pure, measurable learning momentum.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="border-border bg-surface p-6 space-y-3">
+              <div className="h-10 w-10 rounded-lg bg-surface-elevated border border-border flex items-center justify-center text-white">
+                <Clock className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-bold font-mono text-white">
+                Separate Tasks from Time
+              </h3>
+              <p className="text-xs text-foreground-secondary leading-relaxed">
+                Checking off a to-do item is not the same as deep focus. DevLearn tracks actual elapsed study minutes for true progress calculation.
+              </p>
+            </Card>
+
+            <Card className="border-border bg-surface p-6 space-y-3">
+              <div className="h-10 w-10 rounded-lg bg-surface-elevated border border-border flex items-center justify-center text-white">
+                <Layers className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-bold font-mono text-white">
+                Dynamic &amp; Unconstrained
+              </h3>
+              <p className="text-xs text-foreground-secondary leading-relaxed">
+                Create subjects tailored to your journey: Distributed Systems, LeetCode, Kernel Engineering, or Machine Learning.
+              </p>
+            </Card>
+
+            <Card className="border-border bg-surface p-6 space-y-3">
+              <div className="h-10 w-10 rounded-lg bg-surface-elevated border border-border flex items-center justify-center text-white">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-bold font-mono text-white">
+                Private &amp; Self-Contained
+              </h3>
+              <p className="text-xs text-foreground-secondary leading-relaxed">
+                Your study habits are yours alone. Built with custom Argon2id authentication and server-side PostgreSQL persistence.
+              </p>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="container mx-auto max-w-4xl px-6 py-20 space-y-8">
+        <h2 className="text-2xl font-bold font-mono text-white text-center">
+          Frequently Asked Questions
+        </h2>
+
+        <div className="space-y-4">
+          <Card className="border-border bg-surface p-5 space-y-1.5">
+            <h3 className="text-sm font-semibold font-mono text-white">
+              How are streaks calculated?
+            </h3>
+            <p className="text-xs text-foreground-secondary leading-relaxed">
+              Streaks are determined by active learning days (days with at least 1 minute of recorded study time in your configured timezone).
+            </p>
+          </Card>
+
+          <Card className="border-border bg-surface p-5 space-y-1.5">
+            <h3 className="text-sm font-semibold font-mono text-white">
+              What if I close my browser during a focus session?
+            </h3>
+            <p className="text-xs text-foreground-secondary leading-relaxed">
+              The live focus timer syncs with local storage timestamps, preserving your active duration when you reload or reopen the page.
+            </p>
+          </Card>
+
+          <Card className="border-border bg-surface p-5 space-y-1.5">
+            <h3 className="text-sm font-semibold font-mono text-white">
+              Is DevLearn free to use?
+            </h3>
+            <p className="text-xs text-foreground-secondary leading-relaxed">
+              Yes, DevLearn is fully functional without paid third-party API dependencies or subscription gates.
+            </p>
+          </Card>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="border-t border-border py-16 text-center bg-surface-elevated/20">
+        <div className="container mx-auto max-w-3xl px-6 space-y-6">
+          <h2 className="text-3xl font-bold font-mono text-white">
+            Start Quantifying Your Learning Today
+          </h2>
+          <p className="text-xs sm:text-sm text-foreground-secondary max-w-lg mx-auto">
+            Join developers mastering complex topics with measured consistency.
+          </p>
+          <div>
+            <Link href="/register">
+              <Button size="lg" className="gap-2 font-mono text-sm px-8">
+                Create Free Account
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* Footer */}
-      <footer className="border-t border-border py-6 text-center text-xs text-foreground-muted font-mono">
-        <div className="container mx-auto max-w-6xl px-6 flex justify-between items-center">
-          <span>DevLearn Foundation v0.1.0</span>
-          <span>Next: Phase 02 Data Model & Auth</span>
+      <footer className="border-t border-border py-8 text-center text-xs font-mono text-foreground-muted">
+        <div className="container mx-auto max-w-6xl px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-white">DevLearn</span>
+            <span>• Personal Learning SaaS</span>
+          </div>
+          <div>© {new Date().getFullYear()} DevLearn. All rights reserved.</div>
         </div>
       </footer>
     </div>
