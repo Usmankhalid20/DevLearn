@@ -59,6 +59,15 @@
   - Implemented User Settings backend (`/api/settings`) and portal page (`/settings`) for configuring daily learning goal minutes and timezone.
   - Built public marketing website (`/`) with interactive live focus timer preview, grayscale heatmap demo, feature pillars, FAQ, and CTAs.
   - Verified all 19 Vitest integration tests and static generation of all 15 Next.js routes.
+- Completed specification for **Phase 06 — Learning Goals, Data Export & CI/CD** (`featrues/06-goals-and-data-export.md`).
+- **Executed & Verified Phase 06**:
+  - Implemented Learning Goals backend (`/api/goals`) with dynamic study hours progress aggregation.
+  - Implemented Data Portability & Backup backend (`/api/export/json`, `/api/export/csv`).
+  - Built `/goals` portal page with progress bars, hours completed, and milestone deadlines.
+  - Added Data Portability export section in `/settings` (1-click JSON archive & CSV downloads).
+  - Added Goals navigation item to sidebar.
+  - Added GitHub Actions CI/CD workflow (`.github/workflows/ci.yml`).
+  - Verified all 23 Vitest integration tests and static generation of all 16 Next.js routes.
 
 ## In Progress
 
@@ -67,7 +76,6 @@
 ## Next Up
 
 1. Production environment configuration & Dockerfile build verification.
-2. Continuous integration pipeline (GitHub Actions).
 
 
 

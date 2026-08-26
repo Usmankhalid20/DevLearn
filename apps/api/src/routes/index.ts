@@ -8,6 +8,8 @@ import { resourcesRouter } from '../modules/resources/resources.routes.js';
 import { contributionsRouter } from '../modules/contributions/contributions.routes.js';
 import { analyticsRouter } from '../modules/analytics/analytics.routes.js';
 import { settingsRouter } from '../modules/settings/settings.routes.js';
+import { goalsRouter } from '../modules/goals/goals.routes.js';
+import { exportRouter } from '../modules/export/export.routes.js';
 
 export const rootRouter = Router();
 
@@ -23,3 +25,5 @@ rootRouter.use('/resources', resourcesRouter);
 rootRouter.use('/contributions', contributionsRouter);
 rootRouter.use('/analytics', analyticsRouter);
 rootRouter.use('/settings', settingsRouter);
+rootRouter.use('/goals', goalsRouter);
+rootRouter.use('/export', exportRouter);

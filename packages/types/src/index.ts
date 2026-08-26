@@ -120,6 +120,26 @@ export interface LearningSessionDto {
 }
 
 /**
+ * Goal DTO
+ */
+export interface GoalDto {
+  id: string;
+  userId: string;
+  subjectId?: string | null;
+  subject?: SubjectDto | null;
+  title: string;
+  description?: string | null;
+  targetHours: number;
+  currentHours: number;
+  progressPercentage: number;
+  startDate?: string | null;
+  endDate?: string | null;
+  status: 'IN_PROGRESS' | 'COMPLETED' | 'ARCHIVED';
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
  * Contribution Level (Grayscale 0-4)
  */
 export type ContributionLevel = 0 | 1 | 2 | 3 | 4;

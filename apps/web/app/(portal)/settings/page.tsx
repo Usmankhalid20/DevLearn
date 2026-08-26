@@ -223,6 +223,49 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Data Portability Card */}
+      <Card className="border-border bg-surface">
+        <CardHeader>
+          <CardTitle className="text-sm font-mono text-white flex items-center gap-2">
+            <Shield className="h-4 w-4 text-foreground-secondary" />
+            Data Portability &amp; Backups
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Export all your tracked study history, subjects, tasks, and goals.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-xs text-foreground-secondary leading-relaxed">
+            You have full ownership of your data. Download your complete historical archive in
+            JSON format or spreadsheet-ready CSV format.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <a
+              href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/export/json`}
+              download
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button type="button" variant="outline" size="sm" className="font-mono text-xs gap-2">
+                Download JSON Archive
+              </Button>
+            </a>
+
+            <a
+              href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/export/csv`}
+              download
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button type="button" variant="outline" size="sm" className="font-mono text-xs gap-2">
+                Download Sessions (CSV)
+              </Button>
+            </a>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

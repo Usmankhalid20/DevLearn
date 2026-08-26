@@ -10,6 +10,7 @@ import {
   Bookmark,
   History,
   BarChart3,
+  Target,
   Settings,
   Flame,
 } from 'lucide-react';
@@ -24,6 +25,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { title: 'Learning', href: '/learning', icon: BookOpen },
+  { title: 'Goals', href: '/goals', icon: Target },
   { title: 'Tasks', href: '/tasks', icon: CheckSquare },
   { title: 'Resources', href: '/resources', icon: Bookmark },
   { title: 'History', href: '/history', icon: History },
