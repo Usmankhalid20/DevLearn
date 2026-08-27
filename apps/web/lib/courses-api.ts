@@ -1,6 +1,10 @@
 import { apiClient } from './api';
 import type { CourseDto, AchievementDto, DiagnosticsDto } from '@devlearn/types';
 
+export type Course = CourseDto;
+export type Achievement = AchievementDto;
+export type Diagnostics = DiagnosticsDto;
+
 export const coursesApi = {
   async getCourses(): Promise<CourseDto[]> {
     return apiClient<CourseDto[]>('/api/courses');

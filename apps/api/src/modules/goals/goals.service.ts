@@ -1,5 +1,5 @@
 import { prisma } from '../../database/prisma.js';
-import { AppError } from '../../middleware/errorHandler.js';
+import { AppError } from '../../common/errors/app-error.js';
 import type { CreateGoalInput, UpdateGoalInput } from './goals.types.js';
 import type { GoalDto } from '@devlearn/types';
 
@@ -20,7 +20,7 @@ export class GoalsService {
     }
 
     const sessions = await prisma.learningSession.findMany({ where });
-    const totalMinutes = sessions.reduce((acc, s) => acc + s.durationMinutes, 0);
+    const totalMinutes = sessions.reduce((acc: number, s: { durationMinutes: number }) => acc + s.durationMinutes, 0);
     const calculatedHours = Number((totalMinutes / 60).toFixed(1));
     const targetHours = Number((goal.targetMinutes / 60).toFixed(1));
     const currentHours = Math.max(calculatedHours, Number((goal.currentMinutes / 60).toFixed(1)));

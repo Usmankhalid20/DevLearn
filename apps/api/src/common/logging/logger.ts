@@ -1,6 +1,6 @@
 import pino from 'pino';
 import { pinoHttp } from 'pino-http';
-import { env } from '../config/env.js';
+import { env } from '../../config/env.js';
 
 export const logger = pino({
   level: env.NODE_ENV === 'test' ? 'silent' : env.NODE_ENV === 'production' ? 'info' : 'debug',
@@ -20,6 +20,9 @@ export const logger = pino({
 export const httpLogger = pinoHttp({
   logger,
   autoLogging: {
-    ignore: (req) => req.url === '/health' || req.url === '/favicon.ico',
+    ignore: (req) => req.url === '/health' || req.url === '/api/health' || req.url === '/favicon.ico',
   },
+  customProps: (req) => ({
+    requestId: (req as any).id,
+  }),
 });

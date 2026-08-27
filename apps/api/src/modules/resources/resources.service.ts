@@ -1,5 +1,5 @@
 import { prisma } from '../../database/prisma.js';
-import { AppError } from '../../middleware/errorHandler.js';
+import { AppError } from '../../common/errors/app-error.js';
 import type { CreateResourceInput, UpdateResourceInput } from './resources.types.js';
 import type { ResourceDto } from '@devlearn/types';
 

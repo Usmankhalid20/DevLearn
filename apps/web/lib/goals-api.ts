@@ -1,6 +1,8 @@
 import { apiClient } from './api';
 import type { GoalDto } from '@devlearn/types';
 
+export type Goal = GoalDto;
+
 export const goalsApi = {
   async getGoals(): Promise<GoalDto[]> {
     return apiClient<GoalDto[]>('/api/goals');

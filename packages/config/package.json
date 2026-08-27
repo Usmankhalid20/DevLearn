@@ -5,5 +5,11 @@
   "main": "index.js",
   "files": [
     "tsconfig.base.json"
-  ]
+  ],
+  "exports": {
+    "./tsconfig.base.json": "./tsconfig.base.json"
+  },
+  "scripts": {
+    "typecheck": "echo config ok"
+  }
 }

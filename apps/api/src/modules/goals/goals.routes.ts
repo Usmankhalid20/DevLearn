@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { goalsController } from './goals.controller.js';
-import { requireAuth } from '../../middleware/auth.js';
+import { requireAuth } from '../../middleware/auth.middleware.js';
 
 export const goalsRouter = Router();
 

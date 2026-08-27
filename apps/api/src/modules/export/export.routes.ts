@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { exportController } from './export.controller.js';
-import { requireAuth } from '../../middleware/auth.js';
+import { requireAuth } from '../../middleware/auth.middleware.js';
 
 export const exportRouter = Router();
 

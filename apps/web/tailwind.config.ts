@@ -6,10 +6,13 @@ const config: Config = {
     './app/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
     './features/**/*.{ts,tsx}',
+    './providers/**/*.{ts,tsx}',
+    '../../packages/ui/src/**/*.{ts,tsx}',
   ],
   theme: {
     extend: {
       colors: {
+        base: 'var(--bg-base)',
         background: 'var(--bg-base)',
         surface: {
           DEFAULT: 'var(--bg-surface)',

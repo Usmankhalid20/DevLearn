@@ -1,5 +1,6 @@
 import { prisma } from '../../database/prisma.js';
-import { AppError } from '../../middleware/errorHandler.js';
+import { AppError } from '../../common/errors/app-error.js';
+import { analyticsService } from '../analytics/analytics.service.js';
 import type { CreateLearningSessionInput, UpdateLearningSessionInput } from './learning.types.js';
 import type { LearningSessionDto } from '@devlearn/types';
 
@@ -36,7 +37,7 @@ export class LearningService {
       },
     });
 
-    const totalMinutes = sessions.reduce((acc, s) => acc + s.durationMinutes, 0);
+    const totalMinutes = sessions.reduce((acc: number, s: { durationMinutes: number }) => acc + s.durationMinutes, 0);
     const sessionCount = sessions.length;
     const level = this.calculateContributionLevel(totalMinutes);
     const formattedDate = dateStr.slice(0, 10);
@@ -146,7 +147,7 @@ export class LearningService {
     ]);
 
     return {
-      sessions: sessions.map((s) => this.formatSession(s)),
+      sessions: sessions.map((s: any) => this.formatSession(s)),
       total,
     };
   }
@@ -197,8 +198,9 @@ export class LearningService {
       },
     });
 
-    // Update contribution day aggregate
+    // Update contribution day aggregate and invalidate cached analytics
     await this.syncContributionDay(userId, sessionDate.toISOString());
+    await analyticsService.invalidateAnalyticsCache(userId);
 
     return this.formatSession(session);
   }
@@ -254,6 +256,7 @@ export class LearningService {
     if (existing.date.toISOString().slice(0, 10) !== newDate.toISOString().slice(0, 10)) {
       await this.syncContributionDay(userId, newDate.toISOString());
     }
+    await analyticsService.invalidateAnalyticsCache(userId);
 
     return this.formatSession(updated);
   }
@@ -272,6 +275,7 @@ export class LearningService {
 
     await prisma.learningSession.delete({ where: { id } });
     await this.syncContributionDay(userId, existing.date.toISOString());
+    await analyticsService.invalidateAnalyticsCache(userId);
   }
 }
 

@@ -5,6 +5,10 @@ import type {
   UserSettingsDto,
 } from '@devlearn/types';
 
+export type AnalyticsSummary = AnalyticsSummaryDto;
+export type ContributionCalendar = ContributionCalendarDto;
+export type UserSettings = UserSettingsDto;
+
 export const analyticsApi = {
   async getCalendar(): Promise<ContributionCalendarDto> {
     return apiClient<ContributionCalendarDto>('/api/contributions/calendar');

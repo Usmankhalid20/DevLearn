@@ -6,6 +6,11 @@ import type {
   ResourceDto,
 } from '@devlearn/types';
 
+export type Subject = SubjectDto;
+export type Task = TaskDto;
+export type LearningSession = LearningSessionDto;
+export type Resource = ResourceDto;
+
 export const learningApi = {
   // Subjects
   async getSubjects(): Promise<SubjectDto[]> {
@@ -61,33 +66,36 @@ export const learningApi = {
   },
 
   // Learning Sessions
-  async getSessions(filters?: { subjectId?: string; limit?: number; offset?: number }): Promise<LearningSessionDto[]> {
+  async getSessions(filters?: { subjectId?: string; startDate?: string; endDate?: string; limit?: number; offset?: number }): Promise<LearningSessionDto[]> {
     const params = new URLSearchParams();
     if (filters?.subjectId) params.append('subjectId', filters.subjectId);
+    if (filters?.startDate) params.append('startDate', filters.startDate);
+    if (filters?.endDate) params.append('endDate', filters.endDate);
     if (filters?.limit) params.append('limit', String(filters.limit));
     if (filters?.offset) params.append('offset', String(filters.offset));
     const query = params.toString() ? `?${params.toString()}` : '';
-    return apiClient<LearningSessionDto[]>(`/api/learning-sessions${query}`);
+    return apiClient<LearningSessionDto[]>(`/api/sessions${query}`);
   },
 
   async createSession(data: {
     subjectId: string;
     durationMinutes: number;
     date: string;
-    topic?: string | null;
-    learnedNotes?: string | null;
-    generalNotes?: string | null;
+    topic?: string;
+    learnedNotes?: string;
+    generalNotes?: string;
     taskId?: string | null;
+    courseId?: string | null;
     resourceId?: string | null;
   }): Promise<LearningSessionDto> {
-    return apiClient<LearningSessionDto>('/api/learning-sessions', {
+    return apiClient<LearningSessionDto>('/api/sessions', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
   async deleteSession(id: string): Promise<{ message: string }> {
-    return apiClient<{ message: string }>(`/api/learning-sessions/${id}`, {
+    return apiClient<{ message: string }>(`/api/sessions/${id}`, {
       method: 'DELETE',
     });
   },

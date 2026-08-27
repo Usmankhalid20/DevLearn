@@ -56,7 +56,7 @@ export class ExportService {
       return `"${clean}"`;
     };
 
-    const rows = sessions.map((s) => [
+    const rows = sessions.map((s: any) => [
       escapeCsv(s.id),
       escapeCsv(s.date.toISOString().slice(0, 10)),
       escapeCsv(s.subject.name),
@@ -67,7 +67,7 @@ export class ExportService {
       escapeCsv(s.createdAt.toISOString()),
     ]);
 
-    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const csvContent = [headers.join(','), ...rows.map((r: any[]) => r.join(','))].join('\n');
     return csvContent;
   }
 }

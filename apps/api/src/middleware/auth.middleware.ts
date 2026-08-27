@@ -1,9 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import { authService } from '../modules/auth/auth.service.js';
-import { AppError } from './errorHandler.js';
+import { UnauthorizedError, AppError } from '../common/errors/app-error.js';
+import { ERROR_CODES } from '../common/errors/error-codes.js';
+import { APP_CONFIG } from '../config/app-config.js';
 import type { UserDto, UserSettingsDto } from '@devlearn/types';
 
-export const SESSION_COOKIE_NAME = 'devlearn_session';
+export const SESSION_COOKIE_NAME = APP_CONFIG.session.cookieName;
 
 // Extend Express Request interface with authenticated user & settings
 declare global {
@@ -13,6 +15,7 @@ declare global {
       userSettings?: UserSettingsDto | null;
       sessionId?: string;
       sessionToken?: string;
+      id?: string;
     }
   }
 }
@@ -45,13 +48,13 @@ export async function requireAuth(req: Request, _res: Response, next: NextFuncti
   const token = extractSessionToken(req);
 
   if (!token) {
-    next(new AppError(401, 'Authentication required', 'UNAUTHORIZED'));
+    next(new UnauthorizedError('Authentication required'));
     return;
   }
 
   const sessionData = await authService.validateSession(token);
   if (!sessionData) {
-    next(new AppError(401, 'Invalid or expired session. Please log in again.', 'SESSION_EXPIRED'));
+    next(new AppError(401, 'Invalid or expired session. Please log in again.', ERROR_CODES.SESSION_EXPIRED));
     return;
   }
 

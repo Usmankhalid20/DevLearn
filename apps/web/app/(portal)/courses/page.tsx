@@ -2,21 +2,12 @@
 
 import * as React from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  GraduationCap,
-  Plus,
-  ExternalLink,
-  CheckCircle2,
-  Clock,
-  Trash2,
-  Check,
-  Globe,
-} from 'lucide-react';
+import { GraduationCap, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { CourseDialog } from '@/components/courses/course-dialog';
-import { coursesApi } from '@/lib/courses-api';
+import { CourseCard } from '@/components/courses/course-card';
+import { coursesApi, type Course } from '@/lib/courses-api';
 import { learningApi } from '@/lib/learning-api';
 
 export default function CoursesPage() {
@@ -37,7 +28,7 @@ export default function CoursesPage() {
     queryClient.invalidateQueries({ queryKey: ['courses'] });
   };
 
-  const handleToggleComplete = async (course: any) => {
+  const handleToggleComplete = async (course: Course) => {
     await coursesApi.updateCourse(course.id, { isCompleted: !course.isCompleted });
     handleRefresh();
   };
@@ -89,108 +80,18 @@ export default function CoursesPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {courses.map((course) => {
-            const completedHours = (course.completedDurationMinutes / 60).toFixed(1);
-            const totalHours = (course.totalDurationMinutes / 60).toFixed(1);
-
-            return (
-              <Card
-                key={course.id}
-                className="border-border bg-surface hover:border-neutral-700 transition-colors"
-              >
-                <CardContent className="p-5 space-y-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant="default" className="font-mono text-[10px]">
-                          {course.platform}
-                        </Badge>
-                        {course.subject && (
-                          <Badge variant="secondary" className="font-mono text-[10px]">
-                            {course.subject.name}
-                          </Badge>
-                        )}
-                        <Badge
-                          variant={course.isCompleted ? 'default' : 'outline'}
-                          className="font-mono text-[10px]"
-                        >
-                          {course.isCompleted ? 'Completed' : `${course.progressPercentage}%`}
-                        </Badge>
-                      </div>
-
-                      <h3 className="text-base font-bold font-mono text-white">
-                        {course.title}
-                      </h3>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-foreground-muted hover:text-white"
-                        title="Toggle Completed"
-                        onClick={() => handleToggleComplete(course)}
-                      >
-                        <Check className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-foreground-muted hover:text-state-error"
-                        title="Delete Course"
-                        onClick={() => handleDelete(course.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {course.description && (
-                    <p className="text-xs text-foreground-secondary line-clamp-2">
-                      {course.description}
-                    </p>
-                  )}
-
-                  {/* Progress Bar */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs font-mono">
-                      <span className="text-white font-bold">
-                        {completedHours}h logged {course.totalDurationMinutes > 0 && `/ ${totalHours}h`}
-                      </span>
-                      <span className="text-foreground-muted">
-                        {course.progressPercentage}%
-                      </span>
-                    </div>
-                    <div className="h-2 w-full rounded-full bg-surface-elevated overflow-hidden border border-border">
-                      <div
-                        className="h-full bg-white transition-all duration-500 rounded-full"
-                        style={{ width: `${Math.min(100, course.progressPercentage)}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* URL link if exists */}
-                  {course.url && (
-                    <div className="pt-1 border-t border-border/50">
-                      <a
-                        href={course.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-foreground-secondary hover:text-white font-mono transition-colors"
-                      >
-                        <Globe className="h-3 w-3" />
-                        <span className="truncate max-w-xs">{course.url}</span>
-                        <ExternalLink className="h-3 w-3 shrink-0" />
-                      </a>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
+          {courses.map((course) => (
+            <CourseCard
+              key={course.id}
+              course={course}
+              onToggleComplete={handleToggleComplete}
+              onDelete={handleDelete}
+            />
+          ))}
         </div>
       )}
 
+      {/* Add Course Dialog */}
       <CourseDialog
         open={courseDialogOpen}
         onOpenChange={setCourseDialogOpen}

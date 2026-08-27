@@ -1,5 +1,5 @@
 import { prisma } from '../../database/prisma.js';
-import { AppError } from '../../middleware/errorHandler.js';
+import { AppError } from '../../common/errors/app-error.js';
 import type { CreateSubjectInput, UpdateSubjectInput } from './subjects.types.js';
 import type { SubjectDto } from '@devlearn/types';
 

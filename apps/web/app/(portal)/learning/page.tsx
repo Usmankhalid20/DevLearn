@@ -2,13 +2,13 @@
 
 import * as React from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, BookOpen, Clock, Trash2, Calendar, Tag } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { TimerWidget } from '@/components/learning/timer-widget';
 import { SessionDialog } from '@/components/learning/session-dialog';
 import { SubjectDialog } from '@/components/learning/subject-dialog';
+import { SubjectFilterBar } from '@/components/learning/subject-filter-bar';
+import { LearningSessionList } from '@/components/learning/learning-session-list';
 import { learningApi } from '@/lib/learning-api';
 
 export default function LearningPage() {
@@ -47,6 +47,7 @@ export default function LearningPage() {
     queryClient.invalidateQueries({ queryKey: ['learning-sessions'] });
     queryClient.invalidateQueries({ queryKey: ['subjects'] });
     queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    queryClient.invalidateQueries({ queryKey: ['analytics-summary'] });
   };
 
   const handleDeleteSession = async (id: string) => {
@@ -95,148 +96,60 @@ export default function LearningPage() {
         </div>
       </div>
 
-      {/* Focus Timer Section */}
+      {/* Focus Timer Widget */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <TimerWidget onComplete={handleTimerComplete} />
         </div>
 
-        {/* Dynamic Subjects List */}
-        <Card className="border-border bg-surface">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-mono uppercase tracking-wider text-foreground-muted">
-                Your Subjects
-              </CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 text-[11px] font-mono px-2"
-                onClick={() => setSubjectDialogOpen(true)}
-              >
-                + Add
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {subjects.length === 0 ? (
-              <div className="text-center py-6 text-xs text-foreground-muted">
-                No subjects yet. Click <strong>+ Add</strong> to create your first subject.
-              </div>
-            ) : (
-              <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+        {/* Quick Tips / Subject Overview */}
+        <div className="rounded-lg border border-border bg-surface p-5 space-y-4 font-mono text-xs">
+          <h3 className="font-bold text-white uppercase tracking-wider text-[11px]">
+            Active Subjects ({subjects.length})
+          </h3>
+          {subjects.length === 0 ? (
+            <p className="text-foreground-secondary text-[11px]">
+              No subjects yet. Click &quot;New Subject&quot; to organize your skills.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {subjects.map((sub) => (
                 <button
-                  onClick={() => setSelectedSubjectId(null)}
-                  className={`w-full flex items-center justify-between p-2 rounded text-xs font-mono transition-colors text-left ${
-                    selectedSubjectId === null
-                      ? 'bg-surface-elevated text-white border border-border'
-                      : 'text-foreground-secondary hover:bg-surface-elevated/50'
+                  key={sub.id}
+                  onClick={() => setSelectedSubjectId(sub.id === selectedSubjectId ? null : sub.id)}
+                  className={`px-2.5 py-1 rounded text-[11px] border transition-colors ${
+                    selectedSubjectId === sub.id
+                      ? 'bg-white text-black border-white font-semibold'
+                      : 'border-border bg-background text-foreground-secondary hover:text-white'
                   }`}
                 >
-                  <span>All Subjects</span>
+                  {sub.name}
                 </button>
-                {subjects.map((sub) => (
-                  <button
-                    key={sub.id}
-                    onClick={() => setSelectedSubjectId(sub.id)}
-                    className={`w-full flex items-center justify-between p-2 rounded text-xs font-mono transition-colors text-left ${
-                      selectedSubjectId === sub.id
-                        ? 'bg-surface-elevated text-white border border-border'
-                        : 'text-foreground-secondary hover:bg-surface-elevated/50'
-                    }`}
-                  >
-                    <span className="truncate pr-2">{sub.name}</span>
-                    <span className="text-[10px] text-foreground-muted shrink-0">
-                      {sub._count?.learningSessions || 0} sessions
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Recent Activity List */}
+      {/* Filter and Session List */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between border-b border-border pb-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wider font-mono text-white flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            Recent Learning Sessions {selectedSubjectId && '(Filtered)'}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h2 className="text-sm font-bold font-mono text-white uppercase tracking-wider">
+            Recent Sessions
           </h2>
-          <span className="text-xs text-foreground-secondary font-mono">
-            {sessions.length} logged
-          </span>
+          <SubjectFilterBar
+            subjects={subjects}
+            selectedSubjectId={selectedSubjectId}
+            onSelectSubject={setSelectedSubjectId}
+            totalCount={sessions.length}
+          />
         </div>
 
-        {sessionsLoading ? (
-          <div className="text-center py-12 text-xs text-foreground-muted font-mono">
-            Loading sessions...
-          </div>
-        ) : sessions.length === 0 ? (
-          <Card className="bg-surface text-center py-12">
-            <CardContent className="space-y-3">
-              <BookOpen className="mx-auto h-8 w-8 text-foreground-muted" />
-              <div className="space-y-1">
-                <p className="text-sm font-mono text-white">No learning sessions recorded</p>
-                <p className="text-xs text-foreground-secondary">
-                  Use the timer above or click &quot;Log Session&quot; to add your first entry.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {sessions.map((session) => (
-              <Card key={session.id} className="border-border bg-surface transition-colors hover:border-neutral-700">
-                <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="space-y-1.5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant="default" className="font-mono text-xs">
-                        {session.subject.name}
-                      </Badge>
-                      {session.topic && (
-                        <span className="text-xs font-semibold text-white font-mono">
-                          {session.topic}
-                        </span>
-                      )}
-                      <span className="text-xs text-foreground-muted flex items-center gap-1 font-mono">
-                        <Calendar className="h-3 w-3" />
-                        {new Date(session.date).toLocaleDateString()}
-                      </span>
-                    </div>
-
-                    {session.learnedNotes && (
-                      <p className="text-xs text-foreground-secondary line-clamp-2">
-                        {session.learnedNotes}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
-                    <div className="text-right">
-                      <div className="text-base font-bold font-mono text-white">
-                        {session.durationMinutes}m
-                      </div>
-                      <span className="text-[10px] text-foreground-muted font-mono">
-                        duration
-                      </span>
-                    </div>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-foreground-muted hover:text-state-error"
-                      onClick={() => handleDeleteSession(session.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+        <LearningSessionList
+          sessions={sessions}
+          isLoading={sessionsLoading}
+          onDeleteSession={handleDeleteSession}
+        />
       </div>
 
       {/* Dialogs */}

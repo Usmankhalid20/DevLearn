@@ -122,4 +122,60 @@ describe('Authentication Module Integration Tests', () => {
 
     expect(meRes.status).toBe(401);
   });
+
+  it('POST /api/auth/forgot-password and POST /api/auth/reset-password resets user password', async () => {
+    // 1. Request reset
+    const forgotRes = await request(app)
+      .post('/api/auth/forgot-password')
+      .send({ email: testEmail });
+
+    expect(forgotRes.status).toBe(200);
+    expect(forgotRes.body.success).toBe(true);
+
+    // 2. Fetch reset token from DB
+    const resetRecord = await prisma.passwordResetToken.findFirst({
+      where: { user: { email: testEmail } },
+    });
+    expect(resetRecord).toBeDefined();
+
+    // 3. Reset password
+    const newPassword = 'NewSecretPassword123!';
+    const resetRes = await request(app)
+      .post('/api/auth/reset-password')
+      .send({
+        token: resetRecord!.token,
+        password: newPassword,
+      });
+
+    expect(resetRes.status).toBe(200);
+    expect(resetRes.body.success).toBe(true);
+
+    // 4. Verify login works with new password
+    const loginRes = await request(app)
+      .post('/api/auth/login')
+      .send({
+        email: testEmail,
+        password: newPassword,
+      });
+
+    expect(loginRes.status).toBe(200);
+    expect(loginRes.body.success).toBe(true);
+  });
+
+  it('POST /api/auth/verify-email successfully verifies user email address', async () => {
+    // 1. Fetch verification token from DB
+    const verifyRecord = await prisma.verificationToken.findFirst({
+      where: { user: { email: testEmail } },
+    });
+    expect(verifyRecord).toBeDefined();
+
+    // 2. Submit verification token
+    const verifyRes = await request(app)
+      .post('/api/auth/verify-email')
+      .send({ token: verifyRecord!.token });
+
+    expect(verifyRes.status).toBe(200);
+    expect(verifyRes.body.success).toBe(true);
+    expect(verifyRes.body.data.user.isEmailVerified).toBe(true);
+  });
 });

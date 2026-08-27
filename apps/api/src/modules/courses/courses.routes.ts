@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { coursesController } from './courses.controller.js';
-import { requireAuth } from '../../middleware/auth.js';
+import { requireAuth } from '../../middleware/auth.middleware.js';
 
 export const coursesRouter = Router();
 

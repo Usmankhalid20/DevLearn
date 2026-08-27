@@ -1,16 +1,45 @@
 import { prisma } from '../../database/prisma.js';
+import { getRedisClient } from '../../database/redis.js';
+import { logger } from '../../common/logging/logger.js';
 import type {
   AnalyticsSummaryDto,
   SubjectDistributionDto,
   DailyActivityTrendDto,
 } from '@devlearn/types';
 
+const ANALYTICS_CACHE_TTL_SECONDS = 300; // 5 minutes
+
 export class AnalyticsService {
   /**
-   * Calculates comprehensive analytics metrics for authenticated user
+   * Invalidate cached analytics for a given user
+   */
+  async invalidateAnalyticsCache(userId: string): Promise<void> {
+    try {
+      const redis = getRedisClient();
+      await redis.del(`cache:analytics:${userId}`);
+    } catch {
+      // Non-blocking if Redis is unreachable
+    }
+  }
+
+  /**
+   * Calculates comprehensive analytics metrics for authenticated user with Redis cache-aside
    */
   async getSummary(userId: string): Promise<AnalyticsSummaryDto> {
-    // 1. Fetch all contribution days ordered by date
+    const cacheKey = `cache:analytics:${userId}`;
+
+    // 1. Try Redis cache-aside
+    try {
+      const redis = getRedisClient();
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        return JSON.parse(cached) as AnalyticsSummaryDto;
+      }
+    } catch (err) {
+      logger.warn({ err }, 'Redis cache read error, falling back to PostgreSQL');
+    }
+
+    // 2. Fetch from PostgreSQL
     const contributionDays = await prisma.contributionDay.findMany({
       where: { userId },
       orderBy: { date: 'asc' },
@@ -22,7 +51,7 @@ export class AnalyticsService {
       include: { subject: true },
     });
 
-    const totalMinutes = sessions.reduce((acc, s) => acc + s.durationMinutes, 0);
+    const totalMinutes = sessions.reduce((acc: number, s: { durationMinutes: number }) => acc + s.durationMinutes, 0);
     const totalHours = Number((totalMinutes / 60).toFixed(1));
     const totalSessions = sessions.length;
     const averageSessionMinutes =
@@ -55,7 +84,7 @@ export class AnalyticsService {
     // 5. Calculate Last 30 Days Activity Trend
     const dailyActivityTrend = this.calculate30DayTrend(contributionDays);
 
-    return {
+    const summary: AnalyticsSummaryDto = {
       totalMinutes,
       totalHours,
       totalSessions,
@@ -65,6 +94,16 @@ export class AnalyticsService {
       subjectDistribution,
       dailyActivityTrend,
     };
+
+    // Store in Redis cache asynchronously
+    try {
+      const redis = getRedisClient();
+      await redis.setex(cacheKey, ANALYTICS_CACHE_TTL_SECONDS, JSON.stringify(summary));
+    } catch {
+      // Non-blocking
+    }
+
+    return summary;
   }
 
   private calculateStreaks(

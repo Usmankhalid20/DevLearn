@@ -1,11 +1,13 @@
 import { prisma } from '../../database/prisma.js';
-import { AppError } from '../../middleware/errorHandler.js';
+import type { Prisma } from '@prisma/client';
+import { AppError } from '../../common/errors/app-error.js';
 import {
   hashPassword,
   verifyPassword,
   generateRandomToken,
   hashToken,
 } from './auth.utils.js';
+import { emailService } from '../email/email.service.js';
 import type { RegisterInput, LoginInput } from './auth.types.js';
 import type { UserDto, UserSettingsDto } from '@devlearn/types';
 
@@ -61,7 +63,7 @@ export class AuthService {
     );
 
     // Create user, default settings, initial verification token, and session in a transaction
-    const [user, settings] = await prisma.$transaction(async (tx) => {
+    const { user, settings } = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const newUser = await tx.user.create({
         data: {
           email: input.email,
@@ -98,8 +100,11 @@ export class AuthService {
         },
       });
 
-      return [newUser, userSettings];
+      return { user: newUser, settings: userSettings };
     });
+
+    // Send verification email
+    await emailService.sendVerificationEmail(user.email, user.name, rawVerificationToken);
 
     return {
       user: this.formatUser(user),
@@ -230,7 +235,7 @@ export class AuthService {
       throw new AppError(400, 'Verification token has expired', 'TOKEN_EXPIRED');
     }
 
-    const updatedUser = await prisma.$transaction(async (tx) => {
+    const updatedUser = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const user = await tx.user.update({
         where: { id: record.userId },
         data: { isEmailVerified: true },
@@ -274,7 +279,9 @@ export class AuthService {
       }),
     ]);
 
-    // In production, send email via Nodemailer. For development, return debug info.
+    // Send password reset email
+    await emailService.sendPasswordResetEmail(user.email, user.name, rawToken);
+
     return {
       message: 'If an account exists with this email, a reset link has been sent',
       debugToken: process.env.NODE_ENV === 'development' ? rawToken : undefined,

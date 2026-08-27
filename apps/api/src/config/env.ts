@@ -11,6 +11,11 @@ const envSchema = z.object({
   REDIS_URL: z.string().default('redis://localhost:6379'),
   WEB_ORIGIN: z.string().default('http://localhost:3000'),
   SESSION_SECRET: z.string().min(16).default('devlearn_default_session_secret_change_in_production'),
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().optional(),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM: z.string().default('DevLearn <noreply@devlearn.io>'),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
