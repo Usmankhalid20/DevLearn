@@ -2,38 +2,63 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/providers/auth-provider';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  Clock,
-  Flame,
-  BookOpen,
-  CheckCircle2,
-  AlertCircle,
-  Plus,
-  Loader2,
-  Calendar,
-} from 'lucide-react';
+import { ContributionHeatmap } from '@/components/analytics/contribution-heatmap';
+import { DashboardStats } from '@/components/dashboard/dashboard-stats';
+import { DashboardRecentSessions } from '@/components/dashboard/dashboard-recent-sessions';
+import { DashboardQuickTasks } from '@/components/dashboard/dashboard-quick-tasks';
+import { DashboardQuickActions } from '@/components/dashboard/dashboard-quick-actions';
+import { SessionDialog } from '@/components/learning/session-dialog';
+import { TaskDialog } from '@/components/learning/task-dialog';
+import { learningApi } from '@/lib/learning-api';
+import { analyticsApi } from '@/lib/analytics-api';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, settings, isLoading, isAuthenticated, logout } = useAuth();
+  const queryClient = useQueryClient();
+  const { user, settings, isLoading: authLoading, isAuthenticated } = useAuth();
+
+  const [sessionDialogOpen, setSessionDialogOpen] = React.useState(false);
+  const [taskDialogOpen, setTaskDialogOpen] = React.useState(false);
 
   React.useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       router.push('/login');
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [authLoading, isAuthenticated, router]);
 
-  if (isLoading || !user) {
+  // Fetch real analytics summary
+  const { data: summary } = useQuery({
+    queryKey: ['analytics-summary'],
+    queryFn: analyticsApi.getSummary,
+    enabled: isAuthenticated,
+  });
+
+  // Fetch subjects
+  const { data: subjects = [] } = useQuery({
+    queryKey: ['subjects'],
+    queryFn: learningApi.getSubjects,
+    enabled: isAuthenticated,
+  });
+
+  // Fetch recent sessions
+  const { data: recentSessions = [], isLoading: sessionsLoading } = useQuery({
+    queryKey: ['learning-sessions', 'recent'],
+    queryFn: () => learningApi.getSessions({ limit: 10 }),
+    enabled: isAuthenticated,
+  });
+
+  // Fetch tasks
+  const { data: tasks = [] } = useQuery({
+    queryKey: ['tasks', 'all'],
+    queryFn: () => learningApi.getTasks(),
+    enabled: isAuthenticated,
+  });
+
+  if (authLoading || !user) {
     return (
       <div className="flex h-64 items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-white" />
@@ -41,9 +66,34 @@ export default function DashboardPage() {
     );
   }
 
+  // Calculate live today metrics
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const todaySessions = recentSessions.filter((s) => s.date.slice(0, 10) === todayStr);
+  const todayMinutes = todaySessions.reduce((acc, s) => acc + s.durationMinutes, 0);
+  const dailyGoal = settings?.dailyGoalMinutes || 60;
+  const goalProgress = Math.min(100, Math.round((todayMinutes / dailyGoal) * 100));
+
+  const totalHours = summary?.totalHours ?? '0.0';
+  const totalSessionsCount = summary?.totalSessions ?? recentSessions.length;
+  const currentStreak = summary?.currentStreak ?? 0;
+  const completedTasks = tasks.filter((t) => t.isCompleted);
+
+  const handleToggleTask = async (id: string) => {
+    await learningApi.toggleTask(id);
+    queryClient.invalidateQueries({ queryKey: ['tasks'] });
+  };
+
+  const handleRefreshData = () => {
+    queryClient.invalidateQueries({ queryKey: ['learning-sessions'] });
+    queryClient.invalidateQueries({ queryKey: ['analytics-summary'] });
+    queryClient.invalidateQueries({ queryKey: ['contribution-calendar'] });
+    queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    queryClient.invalidateQueries({ queryKey: ['subjects'] });
+  };
+
   return (
     <div className="space-y-8">
-      {/* Verification notice if email not verified */}
+      {/* Verification Notice */}
       {!user.isEmailVerified && (
         <div className="flex items-center justify-between rounded-lg border border-state-warning/30 bg-surface p-4 text-xs">
           <div className="flex items-center gap-2 text-foreground-secondary">
@@ -58,120 +108,65 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Greeting Header */}
+      {/* Header & Quick Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
           <h1 className="text-2xl font-bold font-mono tracking-tight text-white">
-            Welcome, {user.name || user.email.split('@')[0]}
+            Welcome back, {user.name || user.email.split('@')[0]}
           </h1>
           <p className="text-xs text-foreground-secondary mt-1">
-            Today&apos;s target: {settings?.dailyGoalMinutes || 60} minutes • Timezone: {settings?.timezone || 'UTC'}
+            Here is your daily study overview, active streak, and recent learning activity.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button size="sm" variant="outline" onClick={() => logout()}>
-            Sign out
-          </Button>
-        </div>
+        <DashboardQuickActions
+          onOpenSessionDialog={() => setSessionDialogOpen(true)}
+          onOpenTaskDialog={() => setTaskDialogOpen(true)}
+        />
       </div>
 
-      {/* Metric Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-surface">
-          <CardHeader className="p-4 pb-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-mono text-foreground-muted uppercase">Today</span>
-              <Clock className="h-4 w-4 text-foreground-secondary" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold font-mono text-white">0m</div>
-            <p className="text-[11px] text-foreground-secondary mt-1">
-              0% of daily goal ({settings?.dailyGoalMinutes || 60}m)
-            </p>
-          </CardContent>
-        </Card>
+      {/* Primary Key Stats Cards */}
+      <DashboardStats
+        todayMinutes={todayMinutes}
+        dailyGoal={dailyGoal}
+        goalProgress={goalProgress}
+        currentStreak={currentStreak}
+        totalHours={totalHours}
+        totalSessionsCount={totalSessionsCount}
+        completedTasksCount={completedTasks.length}
+        totalTasksCount={tasks.length}
+      />
 
-        <Card className="bg-surface">
-          <CardHeader className="p-4 pb-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-mono text-foreground-muted uppercase">Streak</span>
-              <Flame className="h-4 w-4 text-white" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold font-mono text-white">0 days</div>
-            <p className="text-[11px] text-foreground-secondary mt-1">Best streak: 0 days</p>
-          </CardContent>
-        </Card>
+      {/* 52-Week Learning Heatmap */}
+      <ContributionHeatmap />
 
-        <Card className="bg-surface">
-          <CardHeader className="p-4 pb-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-mono text-foreground-muted uppercase">This Week</span>
-              <Calendar className="h-4 w-4 text-foreground-secondary" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold font-mono text-white">0.0h</div>
-            <p className="text-[11px] text-foreground-secondary mt-1">0 learning sessions</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-surface">
-          <CardHeader className="p-4 pb-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-mono text-foreground-muted uppercase">Tasks</span>
-              <CheckCircle2 className="h-4 w-4 text-foreground-secondary" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold font-mono text-white">0 / 0</div>
-            <p className="text-[11px] text-foreground-secondary mt-1">0 pending tasks</p>
-          </CardContent>
-        </Card>
+      {/* 2-Column Grid: Recent Sessions & Quick Tasks */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <DashboardRecentSessions
+          sessions={recentSessions}
+          isLoading={sessionsLoading}
+        />
+        <DashboardQuickTasks
+          tasks={tasks}
+          onToggleTask={handleToggleTask}
+          onOpenNewTask={() => setTaskDialogOpen(true)}
+        />
       </div>
 
-      {/* Activity Heatmap Placeholder Section */}
-      <Card className="bg-surface">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-sm font-mono text-white">
-                Learning Contribution Calendar
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Monochrome learning activity based on actual tracked minutes
-              </CardDescription>
-            </div>
-            <Badge variant="secondary" className="font-mono text-[10px]">
-              Phase 04 Feature
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-1.5 pb-3">
-            <div className="h-3.5 w-3.5 rounded-sm bg-contrib-0 border border-border" />
-            <div className="h-3.5 w-3.5 rounded-sm bg-contrib-1 border border-border" />
-            <div className="h-3.5 w-3.5 rounded-sm bg-contrib-2 border border-border" />
-            <div className="h-3.5 w-3.5 rounded-sm bg-contrib-3 border border-border" />
-            <div className="h-3.5 w-3.5 rounded-sm bg-contrib-4 border border-border" />
-            <span className="text-[11px] font-mono text-foreground-muted ml-2">
-              0m – 120m+ grayscale scale
-            </span>
-          </div>
-
-          <div className="grid grid-cols-12 gap-1.5 pt-2">
-            {Array.from({ length: 48 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-5 w-full rounded-sm border border-border/40 bg-contrib-0"
-              />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Reusable Dialogs */}
+      <SessionDialog
+        open={sessionDialogOpen}
+        onOpenChange={setSessionDialogOpen}
+        subjects={subjects}
+        tasks={tasks}
+        onSuccess={handleRefreshData}
+      />
+      <TaskDialog
+        open={taskDialogOpen}
+        onOpenChange={setTaskDialogOpen}
+        subjects={subjects}
+        onSuccess={handleRefreshData}
+      />
     </div>
   );
 }

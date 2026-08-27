@@ -6,10 +6,13 @@ let redisClient: Redis | null = null;
 export function getRedisClient(): Redis {
   if (!redisClient) {
     redisClient = new Redis(env.REDIS_URL, {
-      maxRetriesPerRequest: 2,
+      maxRetriesPerRequest: 1,
+      enableOfflineQueue: false,
+      commandTimeout: 1000,
+      connectTimeout: 1000,
       retryStrategy(times) {
-        // Linear backoff up to 2 seconds
-        return Math.min(times * 100, 2000);
+        if (times > 2) return null;
+        return Math.min(times * 100, 500);
       },
       lazyConnect: true,
     });

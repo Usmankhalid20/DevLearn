@@ -10,6 +10,9 @@ import {
   Bookmark,
   History,
   BarChart3,
+  Target,
+  GraduationCap,
+  Award,
   Settings,
   Flame,
 } from 'lucide-react';
@@ -24,7 +27,10 @@ interface NavItem {
 const navItems: NavItem[] = [
   { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { title: 'Learning', href: '/learning', icon: BookOpen },
+  { title: 'Goals', href: '/goals', icon: Target },
+  { title: 'Courses', href: '/courses', icon: GraduationCap },
   { title: 'Tasks', href: '/tasks', icon: CheckSquare },
+  { title: 'Achievements', href: '/achievements', icon: Award },
   { title: 'Resources', href: '/resources', icon: Bookmark },
   { title: 'History', href: '/history', icon: History },
   { title: 'Analytics', href: '/analytics', icon: BarChart3 },

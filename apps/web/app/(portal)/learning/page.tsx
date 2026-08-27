@@ -1,0 +1,172 @@
+'use client';
+
+import * as React from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { TimerWidget } from '@/components/learning/timer-widget';
+import { SessionDialog } from '@/components/learning/session-dialog';
+import { SubjectDialog } from '@/components/learning/subject-dialog';
+import { SubjectFilterBar } from '@/components/learning/subject-filter-bar';
+import { LearningSessionList } from '@/components/learning/learning-session-list';
+import { learningApi } from '@/lib/learning-api';
+
+export default function LearningPage() {
+  const queryClient = useQueryClient();
+  const [sessionDialogOpen, setSessionDialogOpen] = React.useState(false);
+  const [subjectDialogOpen, setSubjectDialogOpen] = React.useState(false);
+  const [initialMinutes, setInitialMinutes] = React.useState(30);
+  const [selectedSubjectId, setSelectedSubjectId] = React.useState<string | null>(null);
+
+  // Queries
+  const { data: subjects = [] } = useQuery({
+    queryKey: ['subjects'],
+    queryFn: learningApi.getSubjects,
+  });
+
+  const { data: tasks = [] } = useQuery({
+    queryKey: ['tasks', { isCompleted: false }],
+    queryFn: () => learningApi.getTasks({ isCompleted: false }),
+  });
+
+  const { data: sessions = [], isLoading: sessionsLoading } = useQuery({
+    queryKey: ['learning-sessions', { subjectId: selectedSubjectId }],
+    queryFn: () =>
+      learningApi.getSessions({
+        subjectId: selectedSubjectId || undefined,
+        limit: 20,
+      }),
+  });
+
+  const handleTimerComplete = (minutes: number) => {
+    setInitialMinutes(minutes);
+    setSessionDialogOpen(true);
+  };
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['learning-sessions'] });
+    queryClient.invalidateQueries({ queryKey: ['subjects'] });
+    queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    queryClient.invalidateQueries({ queryKey: ['analytics-summary'] });
+  };
+
+  const handleDeleteSession = async (id: string) => {
+    if (confirm('Are you sure you want to delete this learning session?')) {
+      await learningApi.deleteSession(id);
+      handleRefresh();
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
+        <div>
+          <h1 className="text-2xl font-bold font-mono tracking-tight text-white">
+            Learning Workspace
+          </h1>
+          <p className="text-xs text-foreground-secondary mt-1">
+            Focus with the live timer or manually log completed learning activity.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSubjectDialogOpen(true)}
+            className="gap-1.5 font-mono text-xs"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            New Subject
+          </Button>
+
+          <Button
+            size="sm"
+            onClick={() => {
+              setInitialMinutes(30);
+              setSessionDialogOpen(true);
+            }}
+            disabled={subjects.length === 0}
+            className="gap-1.5 font-mono text-xs"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Log Session
+          </Button>
+        </div>
+      </div>
+
+      {/* Focus Timer Widget */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <TimerWidget onComplete={handleTimerComplete} />
+        </div>
+
+        {/* Quick Tips / Subject Overview */}
+        <div className="rounded-lg border border-border bg-surface p-5 space-y-4 font-mono text-xs">
+          <h3 className="font-bold text-white uppercase tracking-wider text-[11px]">
+            Active Subjects ({subjects.length})
+          </h3>
+          {subjects.length === 0 ? (
+            <p className="text-foreground-secondary text-[11px]">
+              No subjects yet. Click &quot;New Subject&quot; to organize your skills.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {subjects.map((sub) => (
+                <button
+                  key={sub.id}
+                  onClick={() => setSelectedSubjectId(sub.id === selectedSubjectId ? null : sub.id)}
+                  className={`px-2.5 py-1 rounded text-[11px] border transition-colors ${
+                    selectedSubjectId === sub.id
+                      ? 'bg-white text-black border-white font-semibold'
+                      : 'border-border bg-background text-foreground-secondary hover:text-white'
+                  }`}
+                >
+                  {sub.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Filter and Session List */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h2 className="text-sm font-bold font-mono text-white uppercase tracking-wider">
+            Recent Sessions
+          </h2>
+          <SubjectFilterBar
+            subjects={subjects}
+            selectedSubjectId={selectedSubjectId}
+            onSelectSubject={setSelectedSubjectId}
+            totalCount={sessions.length}
+          />
+        </div>
+
+        <LearningSessionList
+          sessions={sessions}
+          isLoading={sessionsLoading}
+          onDeleteSession={handleDeleteSession}
+        />
+      </div>
+
+      {/* Dialogs */}
+      <SessionDialog
+        open={sessionDialogOpen}
+        onOpenChange={setSessionDialogOpen}
+        subjects={subjects}
+        tasks={tasks}
+        initialDurationMinutes={initialMinutes}
+        onSuccess={handleRefresh}
+      />
+
+      <SubjectDialog
+        open={subjectDialogOpen}
+        onOpenChange={setSubjectDialogOpen}
+        onSuccess={handleRefresh}
+      />
+    </div>
+  );
+}

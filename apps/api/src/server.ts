@@ -1,6 +1,6 @@
 import { createApp } from './app.js';
 import { env } from './config/env.js';
-import { logger } from './middleware/logger.js';
+import { logger } from './common/logging/logger.js';
 import { prisma } from './database/prisma.js';
 import { redis } from './database/redis.js';
 

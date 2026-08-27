@@ -7,7 +7,7 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
 } from './auth.types.js';
-import { SESSION_COOKIE_NAME, extractSessionToken } from '../../middleware/auth.js';
+import { SESSION_COOKIE_NAME, extractSessionToken } from '../../middleware/auth.middleware.js';
 import { env } from '../../config/env.js';
 
 const COOKIE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
