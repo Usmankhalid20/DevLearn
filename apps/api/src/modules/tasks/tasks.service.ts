@@ -154,7 +154,9 @@ export class TasksService {
         isCompleted: input.isCompleted !== undefined ? input.isCompleted : undefined,
         completedAt:
           input.isCompleted !== undefined
-            ? input.isCompleted
+            ? input.isCompleted === task.isCompleted
+              ? task.completedAt
+              : input.isCompleted
               ? new Date()
               : null
             : undefined,

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { ArrowRight, Play, Pause, RotateCcw, Sparkles, Clock, Flame, BookOpen } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -51,17 +51,19 @@ export function HeroSection() {
             </p>
 
             <div className="flex flex-wrap items-center gap-4 pt-2">
-              <Link href="/register">
-                <Button size="lg" className="gap-2 font-mono text-sm">
-                  Start Tracking Free
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
+              <Link
+                href="/register"
+                className={buttonVariants({ size: 'lg', className: 'gap-2 font-mono text-sm' })}
+              >
+                Start Tracking Free
+                <ArrowRight className="h-4 w-4" />
               </Link>
 
-              <Link href="#how-it-works">
-                <Button variant="outline" size="lg" className="font-mono text-sm">
-                  See How It Works
-                </Button>
+              <Link
+                href="#how-it-works"
+                className={buttonVariants({ variant: 'outline', size: 'lg', className: 'font-mono text-sm' })}
+              >
+                See How It Works
               </Link>
             </div>
 

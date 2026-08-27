@@ -3,12 +3,19 @@
 import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AchievementCard } from '@/components/achievements/achievement-card';
 import { achievementsApi } from '@/lib/courses-api';
 
 export default function AchievementsPage() {
-  const { data: achievements = [], isLoading } = useQuery({
+  const {
+    data: achievements = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ['achievements'],
     queryFn: achievementsApi.getAchievements,
   });
@@ -36,7 +43,16 @@ export default function AchievementsPage() {
       </div>
 
       {/* Badges Grid */}
-      {isLoading ? (
+      {isError ? (
+        <Card className="bg-surface text-center py-12 border-state-error/40">
+          <CardContent className="space-y-3">
+            <p className="text-sm font-mono text-state-error">Failed to load achievements</p>
+            <Button size="sm" variant="outline" onClick={() => refetch()} className="font-mono text-xs">
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      ) : isLoading ? (
         <div className="flex h-64 items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-white" />
         </div>

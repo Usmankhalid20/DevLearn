@@ -18,10 +18,10 @@ export const learningApi = {
   },
 
   async createSubject(data: { name: string; description?: string; colorToken?: string }): Promise<SubjectDto> {
-    return apiClient<SubjectDto[]>('/api/subjects', {
+    return apiClient<SubjectDto>('/api/subjects', {
       method: 'POST',
       body: JSON.stringify(data),
-    }) as unknown as Promise<SubjectDto>;
+    });
   },
 
   async updateSubject(id: string, data: { name?: string; description?: string | null }): Promise<SubjectDto> {

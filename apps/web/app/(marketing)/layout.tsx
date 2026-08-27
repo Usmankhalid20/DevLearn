@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 
 export default function MarketingLayout({
   children,
@@ -38,10 +38,11 @@ export default function MarketingLayout({
             >
               Log in
             </Link>
-            <Link href="/register">
-              <Button size="sm" className="font-mono text-xs">
-                Start Tracking
-              </Button>
+            <Link
+              href="/register"
+              className={buttonVariants({ size: 'sm', className: 'font-mono text-xs' })}
+            >
+              Start Tracking
             </Link>
           </div>
         </div>

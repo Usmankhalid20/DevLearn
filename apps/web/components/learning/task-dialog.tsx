@@ -50,6 +50,12 @@ export function TaskDialog({ open, onOpenChange, subjects, onSuccess }: TaskDial
     defaultValues: { title: '', description: '', subjectId: '', dueDate: '' },
   });
 
+  const handleClose = () => {
+    reset();
+    setErrorMessage(null);
+    onOpenChange(false);
+  };
+
   const onSubmit = async (data: TaskFormData) => {
     try {
       setErrorMessage(null);
@@ -57,10 +63,9 @@ export function TaskDialog({ open, onOpenChange, subjects, onSuccess }: TaskDial
         title: data.title,
         description: data.description || undefined,
         subjectId: data.subjectId || undefined,
-        dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : undefined,
+        dueDate: data.dueDate ? new Date(`${data.dueDate}T12:00:00Z`).toISOString() : undefined,
       });
-      reset();
-      onOpenChange(false);
+      handleClose();
       onSuccess();
     } catch (err) {
       if (err instanceof ApiError) {
@@ -72,7 +77,16 @@ export function TaskDialog({ open, onOpenChange, subjects, onSuccess }: TaskDial
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          handleClose();
+        } else {
+          onOpenChange(true);
+        }
+      }}
+    >
       <DialogHeader>
         <DialogTitle>Add Learning Task</DialogTitle>
         <DialogDescription>
@@ -91,7 +105,7 @@ export function TaskDialog({ open, onOpenChange, subjects, onSuccess }: TaskDial
           <Label htmlFor="task-title">Task Title *</Label>
           <Input
             id="task-title"
-            placeholder="e.g. Complete LeetCode #200 (Number of Islands)"
+            placeholder="e.g. Read Chapters 4-6 of Designing Data-Intensive Applications"
             {...register('title')}
           />
           {errors.title && (
@@ -104,7 +118,7 @@ export function TaskDialog({ open, onOpenChange, subjects, onSuccess }: TaskDial
             <Label htmlFor="task-subject">Subject (Optional)</Label>
             <Select id="task-subject" {...register('subjectId')}>
               <option value="" className="bg-surface text-foreground-secondary">
-                -- General --
+                -- None / General --
               </option>
               {subjects.map((sub) => (
                 <option key={sub.id} value={sub.id} className="bg-surface text-white">
@@ -115,16 +129,16 @@ export function TaskDialog({ open, onOpenChange, subjects, onSuccess }: TaskDial
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="task-duedate">Due Date (Optional)</Label>
-            <Input id="task-duedate" type="date" {...register('dueDate')} />
+            <Label htmlFor="task-due">Due Date (Optional)</Label>
+            <Input id="task-due" type="date" {...register('dueDate')} />
           </div>
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="task-desc">Notes / Resources (Optional)</Label>
+          <Label htmlFor="task-desc">Notes / Description (Optional)</Label>
           <Textarea
             id="task-desc"
-            placeholder="Links, checklist, or objectives..."
+            placeholder="Additional context, sub-tasks, or reference links..."
             {...register('description')}
           />
         </div>
@@ -133,7 +147,7 @@ export function TaskDialog({ open, onOpenChange, subjects, onSuccess }: TaskDial
           <Button
             type="button"
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={handleClose}
             disabled={isSubmitting}
           >
             Cancel
@@ -142,7 +156,7 @@ export function TaskDialog({ open, onOpenChange, subjects, onSuccess }: TaskDial
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
+                Creating...
               </>
             ) : (
               'Create Task'

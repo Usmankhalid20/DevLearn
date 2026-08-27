@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Target, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -28,16 +28,25 @@ export default function GoalsPage() {
     queryClient.invalidateQueries({ queryKey: ['goals'] });
   };
 
+  const toggleMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: 'IN_PROGRESS' | 'COMPLETED' }) =>
+      goalsApi.updateGoal(id, { status }),
+    onSuccess: handleRefresh,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => goalsApi.deleteGoal(id),
+    onSuccess: handleRefresh,
+  });
+
   const handleToggleComplete = async (goal: Goal) => {
     const newStatus = goal.status === 'COMPLETED' ? 'IN_PROGRESS' : 'COMPLETED';
-    await goalsApi.updateGoal(goal.id, { status: newStatus });
-    handleRefresh();
+    await toggleMutation.mutateAsync({ id: goal.id, status: newStatus });
   };
 
   const handleDelete = async (id: string) => {
     if (confirm('Delete this goal?')) {
-      await goalsApi.deleteGoal(id);
-      handleRefresh();
+      await deleteMutation.mutateAsync(id);
     }
   };
 
@@ -66,6 +75,12 @@ export default function GoalsPage() {
           New Goal
         </Button>
       </div>
+
+      {(toggleMutation.isError || deleteMutation.isError) && (
+        <div className="rounded-md border border-state-error/40 bg-state-error/10 p-3 text-xs text-state-error">
+          Failed to update or delete goal. Please try again.
+        </div>
+      )}
 
       {/* Active Goals Section */}
       <div className="space-y-4">

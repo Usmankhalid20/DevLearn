@@ -27,7 +27,6 @@ const sessionSchema = z.object({
   date: z.string().min(1, 'Date is required'),
   topic: z.string().trim().max(200).optional(),
   learnedNotes: z.string().trim().max(2000).optional(),
-  generalNotes: z.string().trim().max(5000).optional(),
   taskId: z.string().optional(),
 });
 
@@ -52,7 +51,13 @@ export function SessionDialog({
 }: SessionDialogProps) {
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const getTodayLocalStr = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   const {
     register,
@@ -65,10 +70,9 @@ export function SessionDialog({
     defaultValues: {
       subjectId: subjects[0]?.id || '',
       durationMinutes: initialDurationMinutes,
-      date: todayStr,
+      date: getTodayLocalStr(),
       topic: '',
       learnedNotes: '',
-      generalNotes: '',
       taskId: '',
     },
   });
@@ -81,8 +85,15 @@ export function SessionDialog({
       if (subjects.length > 0) {
         setValue('subjectId', subjects[0].id);
       }
+      setValue('date', getTodayLocalStr());
     }
   }, [open, initialDurationMinutes, subjects, setValue]);
+
+  const handleClose = () => {
+    reset();
+    setErrorMessage(null);
+    onOpenChange(false);
+  };
 
   const onSubmit = async (data: SessionFormData) => {
     try {
@@ -93,11 +104,9 @@ export function SessionDialog({
         date: new Date(data.date).toISOString(),
         topic: data.topic || undefined,
         learnedNotes: data.learnedNotes || undefined,
-        generalNotes: data.generalNotes || undefined,
         taskId: data.taskId || undefined,
       });
-      reset();
-      onOpenChange(false);
+      handleClose();
       onSuccess();
     } catch (err) {
       if (err instanceof ApiError) {
@@ -109,7 +118,16 @@ export function SessionDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          handleClose();
+        } else {
+          onOpenChange(true);
+        }
+      }}
+    >
       <DialogHeader>
         <DialogTitle>Log Learning Session</DialogTitle>
         <DialogDescription>
@@ -200,7 +218,7 @@ export function SessionDialog({
           <Button
             type="button"
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={handleClose}
             disabled={isSubmitting}
           >
             Cancel

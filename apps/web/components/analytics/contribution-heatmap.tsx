@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { analyticsApi } from '@/lib/analytics-api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import type { ContributionDayDto } from '@devlearn/types';
 
 interface ContributionHeatmapProps {
@@ -27,20 +28,32 @@ export function ContributionHeatmap({
   const totalHours = (totalMinutes / 60).toFixed(1);
   const activeDays = data?.totalActiveDays || 0;
 
-  // Group 365 days into columns of 7 days (weeks)
-  const weeks: ContributionDayDto[][] = React.useMemo(() => {
+  // Group 365 days into calendar weeks aligned to day of week
+  const weeks: (ContributionDayDto | null)[][] = React.useMemo(() => {
     const daysList = data?.days || [];
     if (daysList.length === 0) return [];
-    const result: ContributionDayDto[][] = [];
-    let currentWeek: ContributionDayDto[] = [];
+    const result: (ContributionDayDto | null)[][] = [];
 
-    daysList.forEach((day, index) => {
+    // Derive leading padding based on first day's UTC day of week (0 = Sunday)
+    const firstDayDate = new Date(`${daysList[0].date}T00:00:00Z`);
+    const leadingPadding = firstDayDate.getUTCDay();
+
+    let currentWeek: (ContributionDayDto | null)[] = Array(leadingPadding).fill(null);
+
+    daysList.forEach((day) => {
       currentWeek.push(day);
-      if (currentWeek.length === 7 || index === daysList.length - 1) {
+      if (currentWeek.length === 7) {
         result.push(currentWeek);
         currentWeek = [];
       }
     });
+
+    if (currentWeek.length > 0) {
+      while (currentWeek.length < 7) {
+        currentWeek.push(null);
+      }
+      result.push(currentWeek);
+    }
 
     return result;
   }, [data?.days]);
@@ -65,20 +78,33 @@ export function ContributionHeatmap({
       {/* Calendar Grid Container */}
       <div className="overflow-x-auto pb-2">
         <div className="inline-flex flex-col gap-1 min-w-[700px]">
-          {/* Weekday indicator & Heatmap Weeks */}
+          {/* Heatmap Weeks */}
           <div className="flex gap-1.5">
             {weeks.map((week, weekIdx) => (
               <div key={weekIdx} className="flex flex-col gap-1.5">
-                {week.map((day) => (
-                  <div
-                    key={day.date}
-                    onMouseEnter={() => setHoveredDay(day)}
-                    onMouseLeave={() => setHoveredDay(null)}
-                    className={`h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-sm border transition-all duration-150 cursor-pointer hover:scale-125 hover:z-10 ${getLevelClass(
-                      day.level
-                    )}`}
-                  />
-                ))}
+                {week.map((day, dayIdx) =>
+                  day ? (
+                    <div
+                      key={day.date}
+                      role="img"
+                      aria-label={`${day.minutes} minutes on ${day.date}`}
+                      tabIndex={0}
+                      onMouseEnter={() => setHoveredDay(day)}
+                      onMouseLeave={() => setHoveredDay(null)}
+                      onFocus={() => setHoveredDay(day)}
+                      onBlur={() => setHoveredDay(null)}
+                      className={cn(
+                        'h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-sm border transition-all duration-150 cursor-pointer hover:scale-125 hover:z-10 focus:outline-none focus:ring-1 focus:ring-white',
+                        getLevelClass(day.level)
+                      )}
+                    />
+                  ) : (
+                    <div
+                      key={`empty-${weekIdx}-${dayIdx}`}
+                      className="h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-sm opacity-0 pointer-events-none"
+                    />
+                  )
+                )}
               </div>
             ))}
           </div>
@@ -99,49 +125,55 @@ export function ContributionHeatmap({
             </span>
           ) : (
             <span className="text-foreground-muted">
-              {activeDays} active learning days • {totalHours}h logged in past year
+              Hover over or focus any day to inspect recorded focus sessions
             </span>
           )}
         </div>
 
-        {/* Monochrome Levels Legend */}
-        <div className="flex items-center gap-1.5 text-[11px] text-foreground-muted">
-          <span>Less</span>
+        {/* Grayscale Color Legend */}
+        <div className="flex items-center gap-1.5 text-foreground-secondary">
+          <span className="text-[11px] mr-1">Less</span>
           <div className="h-3 w-3 rounded-sm bg-contrib-0 border border-border/40" title="0 min" />
           <div className="h-3 w-3 rounded-sm bg-contrib-1 border border-neutral-700" title="1-29 min" />
           <div className="h-3 w-3 rounded-sm bg-contrib-2 border border-neutral-600" title="30-59 min" />
           <div className="h-3 w-3 rounded-sm bg-contrib-3 border border-neutral-400" title="60-119 min" />
           <div className="h-3 w-3 rounded-sm bg-contrib-4 border border-white" title="120+ min" />
-          <span>More</span>
+          <span className="text-[11px] ml-1">More</span>
         </div>
       </div>
     </div>
   );
 
   if (!showCardWrapper) {
-    return content;
+    return <div className={cn(className)}>{content}</div>;
   }
 
   return (
-    <Card className={`border-border bg-surface text-foreground ${className}`}>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+    <Card className={cn('border-border bg-surface', className)}>
+      <CardHeader className="p-5 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <CardTitle className="text-sm font-mono text-white">
-              Learning Activity Calendar
+            <CardTitle className="text-base font-bold font-mono tracking-tight text-white">
+              Consistency Matrix
             </CardTitle>
-            <CardDescription className="text-xs text-foreground-secondary">
-              Actual tracked learning sessions over the past 365 days
+            <CardDescription className="text-xs font-mono text-foreground-secondary mt-0.5">
+              365-day monochrome heatmap tracking daily deep work
             </CardDescription>
           </div>
-          <Badge variant="outline" className="font-mono text-[10px]">
-            {totalHours}h Total
-          </Badge>
+
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="font-mono text-xs">
+              {activeDays} Active Days
+            </Badge>
+            <Badge variant="default" className="font-mono text-xs">
+              {totalHours} Total Hours
+            </Badge>
+          </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-5 pt-2">
         {isLoading ? (
-          <div className="h-28 flex items-center justify-center text-xs text-foreground-muted font-mono">
+          <div className="h-36 flex items-center justify-center font-mono text-xs text-foreground-muted">
             Loading activity heatmap...
           </div>
         ) : (

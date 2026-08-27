@@ -3,12 +3,14 @@ import type { ContributionCalendarDto, ContributionDayDto, ContributionLevel } f
 
 export class ContributionsService {
   /**
-   * Returns a 365-day continuous contribution array ending today
+   * Returns a 365-day continuous contribution array ending today in UTC
    */
   async getCalendar(userId: string): Promise<ContributionCalendarDto> {
     const today = new Date();
-    const oneYearAgo = new Date();
-    oneYearAgo.setDate(today.getDate() - 364);
+    today.setUTCHours(0, 0, 0, 0);
+
+    const oneYearAgo = new Date(today);
+    oneYearAgo.setUTCDate(today.getUTCDate() - 364);
 
     const startDateStr = oneYearAgo.toISOString().slice(0, 10);
     const endDateStr = today.toISOString().slice(0, 10);
@@ -59,7 +61,7 @@ export class ContributionsService {
         });
       }
 
-      currentIter.setDate(currentIter.getDate() + 1);
+      currentIter.setUTCDate(currentIter.getUTCDate() + 1);
     }
 
     return {

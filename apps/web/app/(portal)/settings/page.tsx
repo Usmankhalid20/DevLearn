@@ -17,7 +17,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Loader2, Settings, User, Clock, Shield } from 'lucide-react';
+import { Check, Loader2, User, Clock, Shield } from 'lucide-react';
 
 const COMMON_TIMEZONES = [
   'UTC',
@@ -40,8 +40,14 @@ export default function SettingsPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
-  const { data: settings, isLoading } = useQuery({
+  const {
+    data: settings,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ['settings'],
     queryFn: analyticsApi.getSettings,
   });
@@ -62,14 +68,32 @@ export default function SettingsPage() {
       queryClient.invalidateQueries({ queryKey: ['settings'] });
       queryClient.invalidateQueries({ queryKey: ['analytics-summary'] });
       setSuccessMessage('Preferences updated successfully.');
+      setErrorMessage(null);
       setTimeout(() => setSuccessMessage(null), 3000);
+    },
+    onError: (err: any) => {
+      setErrorMessage(err?.message || 'Failed to update preferences.');
+      setSuccessMessage(null);
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
+    setSuccessMessage(null);
     mutation.mutate({ dailyGoalMinutes: Number(dailyGoal), timezone });
   };
+
+  if (isError) {
+    return (
+      <div className="rounded-lg border border-state-error/40 bg-surface p-8 text-center space-y-3">
+        <p className="text-sm font-mono text-state-error">Failed to load user settings</p>
+        <Button size="sm" variant="outline" onClick={() => refetch()} className="font-mono text-xs">
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   if (isLoading || !settings) {
     return (
@@ -95,6 +119,12 @@ export default function SettingsPage() {
         <div className="flex items-center gap-2 rounded-md border border-white/30 bg-surface p-3 text-xs text-white">
           <Check className="h-4 w-4" />
           {successMessage}
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="rounded-md border border-state-error/40 bg-state-error/10 p-3 text-xs text-state-error">
+          {errorMessage}
         </div>
       )}
 

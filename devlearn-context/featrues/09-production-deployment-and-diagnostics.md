@@ -55,7 +55,7 @@ This implementation unit was prepared in accordance with the DevLearn context se
 | Method | Endpoint | Description |
 |---|---|---|
 | `GET` | `/api/health` | Standard lightweight liveness probe returning `200 OK` |
-| `GET` | `/api/health/diagnostics` | In-depth system telemetry measuring live DB/Redis pings, memory, and uptime |
+| `GET` | `/api/system/diagnostics` | In-depth system telemetry measuring live DB/Redis pings, memory, and uptime |
 
 ### Diagnostics Response Contract
 
@@ -105,6 +105,6 @@ export interface SystemDiagnosticsResponse {
 
 ### Automated Integration Tests (`apps/api/tests/health.test.ts`)
 1. Verify `/api/health` returns `status: "ok"`.
-2. Verify `/api/health/diagnostics` returns PostgreSQL latency $> 0\text{ms}$ and memory metrics.
+2. Verify `/api/system/diagnostics` returns PostgreSQL latency $> 0\text{ms}$ and memory metrics.
 3. Verify Dockerfiles build without errors.
 4. Verify Next.js static build produces valid production output.

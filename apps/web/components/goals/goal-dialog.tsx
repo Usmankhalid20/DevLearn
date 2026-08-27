@@ -21,14 +21,26 @@ import { ApiError } from '@/lib/api';
 import { Loader2 } from 'lucide-react';
 import type { SubjectDto } from '@devlearn/types';
 
-const goalSchema = z.object({
-  title: z.string().trim().min(1, 'Goal title is required').max(200),
-  description: z.string().trim().max(1000).optional(),
-  targetHours: z.coerce.number().positive('Must be greater than 0 hours').max(10000),
-  subjectId: z.string().optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-});
+const goalSchema = z
+  .object({
+    title: z.string().trim().min(1, 'Goal title is required').max(200),
+    description: z.string().trim().max(1000).optional(),
+    targetHours: z.coerce.number().positive('Must be greater than 0 hours').max(10000),
+    subjectId: z.string().optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.startDate && data.endDate) {
+      if (new Date(data.endDate) < new Date(data.startDate)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Deadline cannot be earlier than start date',
+          path: ['endDate'],
+        });
+      }
+    }
+  });
 
 type GoalFormData = z.infer<typeof goalSchema>;
 
@@ -59,6 +71,12 @@ export function GoalDialog({ open, onOpenChange, subjects, onSuccess }: GoalDial
     },
   });
 
+  const handleClose = () => {
+    reset();
+    setErrorMessage(null);
+    onOpenChange(false);
+  };
+
   const onSubmit = async (data: GoalFormData) => {
     try {
       setErrorMessage(null);
@@ -70,8 +88,7 @@ export function GoalDialog({ open, onOpenChange, subjects, onSuccess }: GoalDial
         startDate: data.startDate ? new Date(data.startDate).toISOString() : undefined,
         endDate: data.endDate ? new Date(data.endDate).toISOString() : undefined,
       });
-      reset();
-      onOpenChange(false);
+      handleClose();
       onSuccess();
     } catch (err) {
       if (err instanceof ApiError) {
@@ -83,7 +100,16 @@ export function GoalDialog({ open, onOpenChange, subjects, onSuccess }: GoalDial
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          handleClose();
+        } else {
+          onOpenChange(true);
+        }
+      }}
+    >
       <DialogHeader>
         <DialogTitle>Create Learning Goal</DialogTitle>
         <DialogDescription>
@@ -149,6 +175,9 @@ export function GoalDialog({ open, onOpenChange, subjects, onSuccess }: GoalDial
           <div className="space-y-1.5">
             <Label htmlFor="goal-end">Target Deadline (Optional)</Label>
             <Input id="goal-end" type="date" {...register('endDate')} />
+            {errors.endDate && (
+              <p className="text-[11px] text-state-error">{errors.endDate.message}</p>
+            )}
           </div>
         </div>
 
@@ -165,7 +194,7 @@ export function GoalDialog({ open, onOpenChange, subjects, onSuccess }: GoalDial
           <Button
             type="button"
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={handleClose}
             disabled={isSubmitting}
           >
             Cancel

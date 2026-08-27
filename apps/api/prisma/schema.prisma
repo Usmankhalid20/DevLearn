@@ -227,6 +227,7 @@ model LearningSession {
   @@index([userId, date])
   @@index([subjectId])
   @@index([taskId])
+  @@index([courseId])
   @@map("learning_sessions")
 }
 

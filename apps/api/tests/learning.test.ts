@@ -19,12 +19,14 @@ describe('Learning & Tasks Domain Integration Tests', () => {
     const reg1 = await request(app)
       .post('/api/auth/register')
       .send({ email: testEmail1, password: testPassword, name: 'Learner One' });
+    expect(reg1.status).toBe(201);
     user1Cookie = reg1.headers['set-cookie'][0];
 
     // Register User 2
     const reg2 = await request(app)
       .post('/api/auth/register')
       .send({ email: testEmail2, password: testPassword, name: 'Learner Two' });
+    expect(reg2.status).toBe(201);
     user2Cookie = reg2.headers['set-cookie'][0];
   });
 

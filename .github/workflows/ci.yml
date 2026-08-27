@@ -55,10 +55,12 @@ jobs:
           npm run build --workspace=@devlearn/types
           npm run build --workspace=@devlearn/ui
 
-      - name: Run Prisma DB push
+      - name: Run Prisma generate and DB push
         env:
           DATABASE_URL: postgresql://devlearn:devlearn_dev_password@127.0.0.1:5433/devlearn_db?schema=public
-        run: npm run prisma:generate --workspace=@devlearn/api
+        run: |
+          npm run prisma:generate --workspace=@devlearn/api
+          npm run prisma:push --workspace=@devlearn/api
 
       - name: Run TypeScript typecheck
         run: |

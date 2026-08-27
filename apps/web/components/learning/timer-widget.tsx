@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Play, Pause, RotateCcw, Check, Sparkles } from 'lucide-react';
+import { Play, Pause, RotateCcw, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,56 +14,75 @@ export function TimerWidget({ onComplete }: TimerWidgetProps) {
   const [seconds, setSeconds] = React.useState(0);
   const [isActive, setIsActive] = React.useState(false);
 
-  // Restore timer from localStorage if previously running
-  React.useEffect(() => {
+  const calculateCurrentSeconds = React.useCallback(() => {
     const savedStartTime = localStorage.getItem('devlearn_timer_start');
-    const savedElapsed = localStorage.getItem('devlearn_timer_elapsed');
+    const savedElapsed = parseInt(localStorage.getItem('devlearn_timer_elapsed') || '0', 10);
     const savedIsActive = localStorage.getItem('devlearn_timer_active') === 'true';
 
     if (savedIsActive && savedStartTime) {
       const startMs = parseInt(savedStartTime, 10);
-      const prevElapsed = parseInt(savedElapsed || '0', 10);
-      const currentSeconds = prevElapsed + Math.floor((Date.now() - startMs) / 1000);
-      setSeconds(currentSeconds);
-      setIsActive(true);
-    } else if (savedElapsed) {
-      setSeconds(parseInt(savedElapsed, 10));
-      setIsActive(false);
+      const segmentSeconds = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
+      return { total: savedElapsed + segmentSeconds, active: true };
     }
+
+    return { total: savedElapsed, active: false };
   }, []);
 
-  // Timer tick interval
+  // Restore and sync timer state
+  React.useEffect(() => {
+    const syncFromStorage = () => {
+      const { total, active } = calculateCurrentSeconds();
+      setSeconds(total);
+      setIsActive(active);
+    };
+
+    syncFromStorage();
+
+    // Sync across browser tabs
+    const handleStorage = (e: StorageEvent) => {
+      if (
+        e.key === 'devlearn_timer_start' ||
+        e.key === 'devlearn_timer_elapsed' ||
+        e.key === 'devlearn_timer_active'
+      ) {
+        syncFromStorage();
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [calculateCurrentSeconds]);
+
+  // Timer interval
   React.useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
 
     if (isActive) {
       interval = setInterval(() => {
-        setSeconds((prev) => {
-          const next = prev + 1;
-          localStorage.setItem('devlearn_timer_elapsed', String(next));
-          return next;
-        });
+        const { total } = calculateCurrentSeconds();
+        setSeconds(total);
       }, 1000);
-    } else {
-      if (interval) clearInterval(interval);
     }
 
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive]);
+  }, [isActive, calculateCurrentSeconds]);
 
   const handleStart = () => {
-    setIsActive(true);
-    localStorage.setItem('devlearn_timer_start', String(Date.now()));
+    const now = Date.now();
+    localStorage.setItem('devlearn_timer_start', String(now));
     localStorage.setItem('devlearn_timer_active', 'true');
-    localStorage.setItem('devlearn_timer_elapsed', String(seconds));
+    setIsActive(true);
   };
 
   const handlePause = () => {
+    const { total } = calculateCurrentSeconds();
     setIsActive(false);
     localStorage.setItem('devlearn_timer_active', 'false');
-    localStorage.setItem('devlearn_timer_elapsed', String(seconds));
+    localStorage.setItem('devlearn_timer_elapsed', String(total));
+    localStorage.removeItem('devlearn_timer_start');
+    setSeconds(total);
   };
 
   const handleReset = () => {
@@ -75,7 +94,8 @@ export function TimerWidget({ onComplete }: TimerWidgetProps) {
   };
 
   const handleFinish = () => {
-    const minutes = Math.max(1, Math.round(seconds / 60));
+    const { total } = calculateCurrentSeconds();
+    const minutes = Math.max(1, Math.round(total / 60));
     handleReset();
     onComplete(minutes);
   };
@@ -137,7 +157,7 @@ export function TimerWidget({ onComplete }: TimerWidgetProps) {
         </div>
 
         <p className="text-[11px] text-foreground-muted font-mono">
-          Timer persists across tabs and window refreshes.
+          Timer synchronizes across tabs and persists through page reloads.
         </p>
       </CardContent>
     </Card>
