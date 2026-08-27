@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TimerWidget } from '@/components/learning/timer-widget';
@@ -48,12 +48,17 @@ export default function LearningPage() {
     queryClient.invalidateQueries({ queryKey: ['subjects'] });
     queryClient.invalidateQueries({ queryKey: ['tasks'] });
     queryClient.invalidateQueries({ queryKey: ['analytics-summary'] });
+    queryClient.invalidateQueries({ queryKey: ['contribution-calendar'] });
   };
+
+  const deleteSessionMutation = useMutation({
+    mutationFn: learningApi.deleteSession,
+    onSuccess: handleRefresh,
+  });
 
   const handleDeleteSession = async (id: string) => {
     if (confirm('Are you sure you want to delete this learning session?')) {
-      await learningApi.deleteSession(id);
-      handleRefresh();
+      await deleteSessionMutation.mutateAsync(id);
     }
   };
 

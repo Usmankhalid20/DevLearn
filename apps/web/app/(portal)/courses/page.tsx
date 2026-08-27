@@ -19,7 +19,12 @@ export default function CoursesPage() {
     queryFn: learningApi.getSubjects,
   });
 
-  const { data: courses = [], isLoading } = useQuery({
+  const {
+    data: courses = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ['courses'],
     queryFn: coursesApi.getCourses,
   });
@@ -64,7 +69,16 @@ export default function CoursesPage() {
       </div>
 
       {/* Courses List */}
-      {isLoading ? (
+      {isError ? (
+        <Card className="bg-surface text-center py-12 border-state-error/40">
+          <CardContent className="space-y-3">
+            <p className="text-sm font-mono text-state-error">Failed to load courses</p>
+            <Button size="sm" variant="outline" onClick={() => refetch()} className="font-mono text-xs">
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      ) : isLoading ? (
         <div className="text-center py-12 text-xs text-foreground-muted font-mono">
           Loading courses...
         </div>

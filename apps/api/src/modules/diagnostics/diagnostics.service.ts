@@ -3,27 +3,36 @@ import { prisma } from '../../database/prisma.js';
 import { getRedisClient } from '../../database/redis.js';
 import type { DiagnosticsDto } from '@devlearn/types';
 
+function withTimeout<T>(promise: Promise<T>, timeoutMs = 2000): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error('Probe timed out')), timeoutMs)
+    ),
+  ]);
+}
+
 export class DiagnosticsService {
   async getDiagnostics(): Promise<DiagnosticsDto> {
-    // 1. Check DB Latency
+    // 1. Check DB Latency with timeout
     let dbStatus: 'connected' | 'disconnected' = 'disconnected';
     let dbLatencyMs = 0;
     try {
       const dbStart = Date.now();
-      await prisma.$queryRaw`SELECT 1`;
+      await withTimeout(prisma.$queryRaw`SELECT 1`, 2000);
       dbLatencyMs = Date.now() - dbStart;
       dbStatus = 'connected';
     } catch {
       dbStatus = 'disconnected';
     }
 
-    // 2. Check Redis Latency
+    // 2. Check Redis Latency with timeout
     let redisStatus: 'connected' | 'disconnected' = 'disconnected';
     let redisLatencyMs = 0;
     try {
       const redis = getRedisClient();
       const redisStart = Date.now();
-      await redis.ping();
+      await withTimeout(redis.ping(), 2000);
       redisLatencyMs = Date.now() - redisStart;
       redisStatus = 'connected';
     } catch {

@@ -99,7 +99,9 @@ describe('Courses, Achievements & System Diagnostics Integration Tests', () => {
   });
 
   it('GET /api/system/diagnostics returns real system telemetry and service pings', async () => {
-    const res = await request(app).get('/api/system/diagnostics');
+    const res = await request(app)
+      .get('/api/system/diagnostics')
+      .set('Cookie', authCookie);
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);

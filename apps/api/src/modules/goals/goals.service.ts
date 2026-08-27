@@ -4,23 +4,27 @@ import type { CreateGoalInput, UpdateGoalInput } from './goals.types.js';
 import type { GoalDto } from '@devlearn/types';
 
 export class GoalsService {
-  private async calculateGoalProgress(
-    userId: string,
-    goal: any
-  ): Promise<{ currentHours: number; progressPercentage: number }> {
-    const where: any = { userId };
+  private calculateGoalProgressFromSessions(
+    goal: any,
+    sessions: Array<{ subjectId: string; durationMinutes: number; date: Date }>
+  ): { currentHours: number; progressPercentage: number } {
+    let filtered = sessions;
 
     if (goal.subjectId) {
-      where.subjectId = goal.subjectId;
+      filtered = filtered.filter((s) => s.subjectId === goal.subjectId);
     }
-    if (goal.startDate || goal.endDate) {
-      where.date = {};
-      if (goal.startDate) where.date.gte = new Date(goal.startDate);
-      if (goal.endDate) where.date.lte = new Date(goal.endDate);
+    if (goal.startDate) {
+      const start = new Date(goal.startDate).getTime();
+      filtered = filtered.filter((s) => new Date(s.date).getTime() >= start);
+    }
+    if (goal.endDate) {
+      const end = new Date(goal.endDate);
+      end.setUTCHours(23, 59, 59, 999);
+      const endMs = end.getTime();
+      filtered = filtered.filter((s) => new Date(s.date).getTime() <= endMs);
     }
 
-    const sessions = await prisma.learningSession.findMany({ where });
-    const totalMinutes = sessions.reduce((acc: number, s: { durationMinutes: number }) => acc + s.durationMinutes, 0);
+    const totalMinutes = filtered.reduce((acc, s) => acc + s.durationMinutes, 0);
     const calculatedHours = Number((totalMinutes / 60).toFixed(1));
     const targetHours = Number((goal.targetMinutes / 60).toFixed(1));
     const currentHours = Math.max(calculatedHours, Number((goal.currentMinutes / 60).toFixed(1)));
@@ -30,8 +34,11 @@ export class GoalsService {
     return { currentHours, progressPercentage };
   }
 
-  private async formatGoal(userId: string, goal: any): Promise<GoalDto> {
-    const { currentHours, progressPercentage } = await this.calculateGoalProgress(userId, goal);
+  private formatGoalFromSessions(
+    goal: any,
+    sessions: Array<{ subjectId: string; durationMinutes: number; date: Date }>
+  ): GoalDto {
+    const { currentHours, progressPercentage } = this.calculateGoalProgressFromSessions(goal, sessions);
     const targetHours = Number((goal.targetMinutes / 60).toFixed(1));
 
     return {
@@ -62,14 +69,28 @@ export class GoalsService {
     };
   }
 
-  async listGoals(userId: string): Promise<GoalDto[]> {
-    const goals = await prisma.goal.findMany({
+  private async formatGoal(userId: string, goal: any): Promise<GoalDto> {
+    const sessions = await prisma.learningSession.findMany({
       where: { userId },
-      orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
-      include: { subject: true },
+      select: { subjectId: true, durationMinutes: true, date: true },
     });
+    return this.formatGoalFromSessions(goal, sessions);
+  }
 
-    return Promise.all(goals.map((g) => this.formatGoal(userId, g)));
+  async listGoals(userId: string): Promise<GoalDto[]> {
+    const [goals, sessions] = await Promise.all([
+      prisma.goal.findMany({
+        where: { userId },
+        orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
+        include: { subject: true },
+      }),
+      prisma.learningSession.findMany({
+        where: { userId },
+        select: { subjectId: true, durationMinutes: true, date: true },
+      }),
+    ]);
+
+    return goals.map((g) => this.formatGoalFromSessions(g, sessions));
   }
 
   async createGoal(userId: string, input: CreateGoalInput): Promise<GoalDto> {
@@ -132,6 +153,7 @@ export class GoalsService {
         startDate: input.startDate !== undefined ? (input.startDate ? new Date(input.startDate) : null) : undefined,
         endDate: input.endDate !== undefined ? (input.endDate ? new Date(input.endDate) : null) : undefined,
         status: input.status ?? undefined,
+        isAchieved: input.status === 'COMPLETED',
       },
       include: { subject: true },
     });

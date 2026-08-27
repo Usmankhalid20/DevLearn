@@ -1,6 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
-import { ZodSchema, ZodError } from 'zod';
+import { z, ZodSchema, ZodError } from 'zod';
 import { ValidationError } from '../errors/app-error.js';
+
+export const dateStringSchema = z.string().refine(
+  (val) => {
+    const isValidFormat = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?)?$/.test(val);
+    if (!isValidFormat) return false;
+    const d = new Date(val);
+    return !isNaN(d.getTime());
+  },
+  { message: 'Invalid calendar date or ISO datetime format' }
+);
 
 export function validateBody<T>(schema: ZodSchema<T>) {
   return (req: Request, _res: Response, next: NextFunction) => {

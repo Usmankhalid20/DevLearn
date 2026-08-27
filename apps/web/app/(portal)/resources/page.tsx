@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Bookmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,10 +22,14 @@ export default function ResourcesPage() {
     queryClient.invalidateQueries({ queryKey: ['resources'] });
   };
 
+  const deleteMutation = useMutation({
+    mutationFn: learningApi.deleteResource,
+    onSuccess: handleRefresh,
+  });
+
   const handleDelete = async (id: string) => {
     if (confirm('Delete this resource bookmark?')) {
-      await learningApi.deleteResource(id);
-      handleRefresh();
+      await deleteMutation.mutateAsync(id);
     }
   };
 
@@ -51,6 +55,12 @@ export default function ResourcesPage() {
           Add Resource
         </Button>
       </div>
+
+      {deleteMutation.isError && (
+        <div className="rounded-md border border-state-error/40 bg-state-error/10 p-3 text-xs text-state-error">
+          Failed to delete resource bookmark.
+        </div>
+      )}
 
       {/* Resource Grid */}
       {isLoading ? (

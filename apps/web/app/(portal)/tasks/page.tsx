@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TaskDialog } from '@/components/learning/task-dialog';
@@ -29,15 +29,23 @@ export default function TasksPage() {
     queryClient.invalidateQueries({ queryKey: ['subjects'] });
   };
 
+  const toggleMutation = useMutation({
+    mutationFn: learningApi.toggleTask,
+    onSuccess: handleRefresh,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: learningApi.deleteTask,
+    onSuccess: handleRefresh,
+  });
+
   const handleToggle = async (id: string) => {
-    await learningApi.toggleTask(id);
-    handleRefresh();
+    await toggleMutation.mutateAsync(id);
   };
 
   const handleDelete = async (id: string) => {
     if (confirm('Delete this task?')) {
-      await learningApi.deleteTask(id);
-      handleRefresh();
+      await deleteMutation.mutateAsync(id);
     }
   };
 

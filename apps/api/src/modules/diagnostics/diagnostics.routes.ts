@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { diagnosticsController } from './diagnostics.controller.js';
+import { requireAuth } from '../../middleware/auth.middleware.js';
 
 export const diagnosticsRouter = Router();
 
-// Diagnostics is an open system telemetry endpoint (or protected if needed)
-diagnosticsRouter.get('/diagnostics', (req, res, next) =>
+// Protected diagnostics route requiring authenticated session
+diagnosticsRouter.get('/diagnostics', requireAuth, (req, res, next) =>
   diagnosticsController.get(req, res, next)
 );

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight, Sparkles } from 'lucide-react';
 
@@ -25,17 +25,19 @@ export function CtaSection() {
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-              <Link href="/register">
-                <Button size="lg" className="gap-2 font-mono text-sm">
-                  Start Tracking Free
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
+              <Link
+                href="/register"
+                className={buttonVariants({ size: 'lg', className: 'gap-2 font-mono text-sm' })}
+              >
+                Start Tracking Free
+                <ArrowRight className="h-4 w-4" />
               </Link>
 
-              <Link href="/login">
-                <Button variant="outline" size="lg" className="font-mono text-sm">
-                  Log In to Account
-                </Button>
+              <Link
+                href="/login"
+                className={buttonVariants({ variant: 'outline', size: 'lg', className: 'font-mono text-sm' })}
+              >
+                Log In to Account
               </Link>
             </div>
           </CardContent>

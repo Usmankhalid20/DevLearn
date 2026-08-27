@@ -16,6 +16,10 @@ RUN npm ci
 COPY packages/ ./packages/
 COPY apps/web/ ./apps/web/
 
+# Accept build-time API URL
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 RUN npm run build --workspace=@devlearn/config
 RUN npm run build --workspace=@devlearn/types
 RUN npm run build --workspace=@devlearn/ui
@@ -30,6 +34,7 @@ ENV PORT=3000
 
 USER node
 
+COPY --chown=node:node --from=builder /app/package.json ./package.json
 COPY --chown=node:node --from=builder /app/apps/web/.next ./apps/web/.next
 COPY --chown=node:node --from=builder /app/apps/web/public ./apps/web/public
 COPY --chown=node:node --from=builder /app/apps/web/package.json ./apps/web/package.json

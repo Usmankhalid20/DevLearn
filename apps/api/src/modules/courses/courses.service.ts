@@ -4,13 +4,7 @@ import type { CreateCourseInput, UpdateCourseInput } from './courses.types.js';
 import type { CourseDto } from '@devlearn/types';
 
 export class CoursesService {
-  private async formatCourse(course: any): Promise<CourseDto> {
-    // Dynamically calculate completed minutes from sessions linked to this course
-    const sessions = await prisma.learningSession.findMany({
-      where: { courseId: course.id },
-    });
-
-    const calculatedMinutes = sessions.reduce((acc, s) => acc + s.durationMinutes, 0);
+  private formatCourseFromAggregates(course: any, calculatedMinutes: number): CourseDto {
     const completedDurationMinutes = Math.max(calculatedMinutes, course.completedDurationMinutes || 0);
 
     const progressPercentage =
@@ -38,6 +32,7 @@ export class CoursesService {
       title: course.title,
       platform: course.platform,
       url: course.url,
+      description: course.description,
       totalDurationMinutes: course.totalDurationMinutes,
       completedDurationMinutes,
       progressPercentage,
@@ -47,14 +42,39 @@ export class CoursesService {
     };
   }
 
-  async listCourses(userId: string): Promise<CourseDto[]> {
-    const courses = await prisma.course.findMany({
-      where: { userId },
-      orderBy: [{ isCompleted: 'asc' }, { createdAt: 'desc' }],
-      include: { subject: true },
+  private async formatCourse(course: any): Promise<CourseDto> {
+    // Dynamically calculate completed minutes from sessions linked to this course
+    const sessions = await prisma.learningSession.findMany({
+      where: { courseId: course.id },
+      select: { durationMinutes: true },
     });
 
-    return Promise.all(courses.map((c) => this.formatCourse(c)));
+    const calculatedMinutes = sessions.reduce((acc, s) => acc + s.durationMinutes, 0);
+    return this.formatCourseFromAggregates(course, calculatedMinutes);
+  }
+
+  async listCourses(userId: string): Promise<CourseDto[]> {
+    const [courses, sessionAggregates] = await Promise.all([
+      prisma.course.findMany({
+        where: { userId },
+        orderBy: [{ isCompleted: 'asc' }, { createdAt: 'desc' }],
+        include: { subject: true },
+      }),
+      prisma.learningSession.groupBy({
+        by: ['courseId'],
+        where: { userId, courseId: { not: null } },
+        _sum: { durationMinutes: true },
+      }),
+    ]);
+
+    const durationMap = new Map<string, number>();
+    for (const agg of sessionAggregates) {
+      if (agg.courseId) {
+        durationMap.set(agg.courseId, agg._sum.durationMinutes || 0);
+      }
+    }
+
+    return courses.map((c) => this.formatCourseFromAggregates(c, durationMap.get(c.id) || 0));
   }
 
   async createCourse(userId: string, input: CreateCourseInput): Promise<CourseDto> {

@@ -3,17 +3,34 @@
 import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
-import { ContributionHeatmap } from '@/components/analytics/contribution-heatmap';
+import { Button } from '@/components/ui/button';
+import { analyticsApi } from '@/lib/analytics-api';
 import { AnalyticsSummaryCards } from '@/components/analytics/analytics-summary-cards';
+import { ContributionHeatmap } from '@/components/analytics/contribution-heatmap';
 import { ActivityTrendChart } from '@/components/analytics/activity-trend-chart';
 import { SubjectDistributionChart } from '@/components/analytics/subject-distribution-chart';
-import { analyticsApi } from '@/lib/analytics-api';
 
 export default function AnalyticsPage() {
-  const { data: summary, isLoading } = useQuery({
+  const {
+    data: summary,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ['analytics-summary'],
     queryFn: analyticsApi.getSummary,
   });
+
+  if (isError) {
+    return (
+      <div className="rounded-lg border border-state-error/40 bg-surface p-8 text-center space-y-3">
+        <p className="text-sm font-mono text-state-error">Failed to load analytics data</p>
+        <Button size="sm" variant="outline" onClick={() => refetch()} className="font-mono text-xs">
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   if (isLoading || !summary) {
     return (

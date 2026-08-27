@@ -1,22 +1,27 @@
 import { Request, Response, NextFunction } from 'express';
+import { z } from 'zod';
 import { learningService } from './learning.service.js';
 import { createLearningSessionSchema, updateLearningSessionSchema } from './learning.types.js';
+
+const listQuerySchema = z.object({
+  subjectId: z.string().uuid().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+});
 
 export class LearningController {
   async list(req: Request, res: Response, next: NextFunction) {
     try {
-      const subjectId = req.query.subjectId as string | undefined;
-      const startDate = req.query.startDate as string | undefined;
-      const endDate = req.query.endDate as string | undefined;
-      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
-      const offset = req.query.offset ? parseInt(req.query.offset as string, 10) : undefined;
+      const parsedQuery = listQuerySchema.parse(req.query);
 
       const result = await learningService.listSessions(req.user!.id, {
-        subjectId,
-        startDate,
-        endDate,
-        limit,
-        offset,
+        subjectId: parsedQuery.subjectId,
+        startDate: parsedQuery.startDate,
+        endDate: parsedQuery.endDate,
+        limit: parsedQuery.limit,
+        offset: parsedQuery.offset,
       });
 
       res.status(200).json({ success: true, data: result.sessions, meta: { total: result.total } });
