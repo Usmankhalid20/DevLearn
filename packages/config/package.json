@@ -10,6 +10,7 @@
     "./tsconfig.base.json": "./tsconfig.base.json"
   },
   "scripts": {
-    "typecheck": "echo config ok"
+    "build": "echo @devlearn/config ready",
+    "typecheck": "echo @devlearn/config ok"
   }
 }
