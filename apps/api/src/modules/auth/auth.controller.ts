@@ -8,16 +8,14 @@ import {
   resetPasswordSchema,
 } from './auth.types.js';
 import { SESSION_COOKIE_NAME, extractSessionToken } from '../../middleware/auth.middleware.js';
-import { env } from '../../config/env.js';
-
-const COOKIE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+import { APP_CONFIG } from '../../config/app-config.js';
 
 export function setSessionCookie(res: Response, token: string) {
   res.cookie(SESSION_COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: COOKIE_MAX_AGE_MS,
+    httpOnly: APP_CONFIG.session.httpOnly,
+    secure: APP_CONFIG.session.secure,
+    sameSite: APP_CONFIG.session.sameSite,
+    maxAge: APP_CONFIG.session.maxAgeMs,
     signed: true,
     path: '/',
   });
@@ -25,9 +23,9 @@ export function setSessionCookie(res: Response, token: string) {
 
 export function clearSessionCookie(res: Response) {
   res.clearCookie(SESSION_COOKIE_NAME, {
-    httpOnly: true,
-    secure: env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    httpOnly: APP_CONFIG.session.httpOnly,
+    secure: APP_CONFIG.session.secure,
+    sameSite: APP_CONFIG.session.sameSite,
     path: '/',
   });
 }

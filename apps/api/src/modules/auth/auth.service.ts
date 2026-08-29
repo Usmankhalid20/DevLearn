@@ -287,7 +287,7 @@ export class AuthService {
 
     return {
       message: 'If an account exists with this email, a reset link has been sent',
-      debugToken: process.env.NODE_ENV === 'development' ? rawToken : undefined,
+      debugToken: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' ? rawToken : undefined,
     };
   }
 
