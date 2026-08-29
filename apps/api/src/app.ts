@@ -10,6 +10,7 @@ import { errorHandler, notFoundHandler } from './middleware/error.middleware.js'
 // Route Handlers & Domain Modules
 import { healthRouter } from './health/health.routes.js';
 import { authRouter } from './modules/auth/auth.routes.js';
+import { usersRouter } from './modules/users/users.routes.js';
 import { subjectsRouter } from './modules/subjects/subjects.routes.js';
 import { tasksRouter } from './modules/tasks/tasks.routes.js';
 import { learningRouter } from './modules/learning/learning.routes.js';
@@ -25,6 +26,9 @@ import { diagnosticsRouter } from './modules/diagnostics/diagnostics.routes.js';
 
 export function createApp() {
   const app = express();
+
+  // Trust proxy for secure cookies behind reverse proxies (Render, Vercel, Nginx, AWS, Cloudflare)
+  app.set('trust proxy', 1);
 
   // Security Headers
   app.use(
@@ -62,10 +66,12 @@ export function createApp() {
 
   // Feature Modules
   apiRouter.use('/auth', authRouter);
+  apiRouter.use('/users', usersRouter);
   apiRouter.use('/subjects', subjectsRouter);
   apiRouter.use('/tasks', tasksRouter);
   apiRouter.use('/courses', coursesRouter);
   apiRouter.use('/learning-sessions', learningRouter);
+  apiRouter.use('/learning/sessions', learningRouter);
   apiRouter.use('/resources', resourcesRouter);
   apiRouter.use('/contributions', contributionsRouter);
   apiRouter.use('/analytics', analyticsRouter);
@@ -74,7 +80,8 @@ export function createApp() {
   apiRouter.use('/goals', goalsRouter);
   apiRouter.use('/export', exportRouter);
 
-  // Mount API router under /api and root fallback
+  // Mount API router under /api/v1 (primary versioned), /api (compatibility), and root
+  app.use('/api/v1', apiRouter);
   app.use('/api', apiRouter);
   app.use('/', apiRouter);
 

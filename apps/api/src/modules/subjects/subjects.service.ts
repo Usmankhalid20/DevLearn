@@ -1,5 +1,6 @@
 import { prisma } from '../../database/prisma.js';
 import { AppError } from '../../common/errors/app-error.js';
+import { analyticsService } from '../analytics/analytics.service.js';
 import type { CreateSubjectInput, UpdateSubjectInput } from './subjects.types.js';
 import type { SubjectDto } from '@devlearn/types';
 
@@ -155,6 +156,8 @@ export class SubjectsService {
     await prisma.subject.delete({
       where: { id },
     });
+
+    await analyticsService.invalidateAnalyticsCache(userId);
   }
 }
 

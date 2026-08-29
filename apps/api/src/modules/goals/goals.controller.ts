@@ -32,6 +32,17 @@ export class GoalsController {
     }
   }
 
+  async complete(req: Request, res: Response, next: NextFunction) {
+    try {
+      const goal = await goalsService.updateGoal(req.user!.id, req.params.id, {
+        status: 'COMPLETED',
+      });
+      res.status(200).json({ success: true, data: goal });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
       await goalsService.deleteGoal(req.user!.id, req.params.id);
