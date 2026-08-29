@@ -8,7 +8,7 @@ export const APP_CONFIG = {
     maxAgeMs: 30 * 24 * 60 * 60 * 1000, // 30 days
     httpOnly: true,
     secure: env.NODE_ENV === 'production',
-    sameSite: env.NODE_ENV === 'production' ? ('strict' as const) : ('lax' as const),
+    sameSite: env.NODE_ENV === 'production' ? ('none' as const) : ('lax' as const),
   },
   rateLimits: {
     authWindowMs: 15 * 60 * 1000, // 15 minutes

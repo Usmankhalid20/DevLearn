@@ -58,6 +58,7 @@ export class AuthService {
     const sessionExpiresAt = new Date(Date.now() + SESSION_EXPIRATION_DAYS * 24 * 60 * 60 * 1000);
 
     const rawVerificationToken = generateRandomToken(32);
+    const verificationTokenHash = hashToken(rawVerificationToken);
     const verificationExpiresAt = new Date(
       Date.now() + VERIFICATION_TOKEN_EXPIRATION_HOURS * 60 * 60 * 1000
     );
@@ -85,7 +86,7 @@ export class AuthService {
       await tx.verificationToken.create({
         data: {
           userId: newUser.id,
-          token: rawVerificationToken,
+          token: verificationTokenHash,
           expiresAt: verificationExpiresAt,
         },
       });
@@ -221,8 +222,9 @@ export class AuthService {
    * Verify email address with token
    */
   async verifyEmail(token: string): Promise<UserDto> {
+    const tokenHash = hashToken(token);
     const record = await prisma.verificationToken.findUnique({
-      where: { token },
+      where: { token: tokenHash },
       include: { user: true },
     });
 
@@ -265,6 +267,7 @@ export class AuthService {
     }
 
     const rawToken = generateRandomToken(32);
+    const tokenHash = hashToken(rawToken);
     const expiresAt = new Date(Date.now() + RESET_TOKEN_EXPIRATION_HOURS * 60 * 60 * 1000);
 
     // Remove any previous reset tokens for this user and create a fresh one
@@ -273,13 +276,13 @@ export class AuthService {
       prisma.passwordResetToken.create({
         data: {
           userId: user.id,
-          token: rawToken,
+          token: tokenHash,
           expiresAt,
         },
       }),
     ]);
 
-    // Send password reset email
+    // Send password reset email with raw token
     await emailService.sendPasswordResetEmail(user.email, user.name, rawToken);
 
     return {
@@ -292,8 +295,9 @@ export class AuthService {
    * Reset password with valid token
    */
   async resetPassword(token: string, newPassword: string): Promise<void> {
+    const tokenHash = hashToken(token);
     const record = await prisma.passwordResetToken.findUnique({
-      where: { token },
+      where: { token: tokenHash },
     });
 
     if (!record) {
