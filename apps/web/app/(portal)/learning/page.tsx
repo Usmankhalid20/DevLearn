@@ -9,14 +9,16 @@ import { SessionDialog } from '@/components/learning/session-dialog';
 import { SubjectDialog } from '@/components/learning/subject-dialog';
 import { SubjectFilterBar } from '@/components/learning/subject-filter-bar';
 import { LearningSessionList } from '@/components/learning/learning-session-list';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { learningApi } from '@/lib/learning-api';
 
 export default function LearningPage() {
   const queryClient = useQueryClient();
   const [sessionDialogOpen, setSessionDialogOpen] = React.useState(false);
   const [subjectDialogOpen, setSubjectDialogOpen] = React.useState(false);
-  const [initialMinutes, setInitialMinutes] = React.useState(30);
+  const [initialMinutes, setInitialMinutes] = React.useState<number | undefined>();
   const [selectedSubjectId, setSelectedSubjectId] = React.useState<string | null>(null);
+  const [deleteSessionId, setDeleteSessionId] = React.useState<string | null>(null);
 
   // Queries
   const { data: subjects = [] } = useQuery({
@@ -53,13 +55,14 @@ export default function LearningPage() {
 
   const deleteSessionMutation = useMutation({
     mutationFn: learningApi.deleteSession,
-    onSuccess: handleRefresh,
+    onSuccess: () => {
+      setDeleteSessionId(null);
+      handleRefresh();
+    },
   });
 
   const handleDeleteSession = async (id: string) => {
-    if (confirm('Are you sure you want to delete this learning session?')) {
-      await deleteSessionMutation.mutateAsync(id);
-    }
+    setDeleteSessionId(id);
   };
 
   return (
@@ -171,6 +174,25 @@ export default function LearningPage() {
         open={subjectDialogOpen}
         onOpenChange={setSubjectDialogOpen}
         onSuccess={handleRefresh}
+      />
+
+      {/* Delete Session Modal */}
+      <ConfirmModal
+        open={Boolean(deleteSessionId)}
+        onOpenChange={(open) => {
+          if (!open) setDeleteSessionId(null);
+        }}
+        title="Delete Learning Session"
+        description="Are you sure you want to delete this recorded learning session? Tracked minutes and associated notes will be permanently removed."
+        confirmLabel="Delete Session"
+        variant="danger"
+        icon="delete"
+        isLoading={deleteSessionMutation.isPending}
+        onConfirm={async () => {
+          if (deleteSessionId) {
+            await deleteSessionMutation.mutateAsync(deleteSessionId);
+          }
+        }}
       />
     </div>
   );

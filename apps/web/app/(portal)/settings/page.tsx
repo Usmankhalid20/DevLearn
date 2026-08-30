@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/providers/auth-provider';
 import { analyticsApi } from '@/lib/analytics-api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,8 +15,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Check, Loader2, User, Clock, Shield } from 'lucide-react';
+import { Check, Loader2, Clock, Shield, AlertCircle } from 'lucide-react';
+import { showToast } from '@/lib/toast';
+import { formatErrorMessage } from '@/lib/api';
 
 const COMMON_TIMEZONES = [
   'UTC',
@@ -38,7 +38,6 @@ const COMMON_TIMEZONES = [
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
@@ -67,12 +66,15 @@ export default function SettingsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] });
       queryClient.invalidateQueries({ queryKey: ['analytics-summary'] });
-      setSuccessMessage('Preferences updated successfully.');
+      showToast.success('Learning preferences updated successfully!');
+      setSuccessMessage('Learning preferences updated successfully.');
       setErrorMessage(null);
       setTimeout(() => setSuccessMessage(null), 3000);
     },
     onError: (err: any) => {
-      setErrorMessage(err?.message || 'Failed to update preferences.');
+      const message = formatErrorMessage(err);
+      setErrorMessage(message);
+      showToast.error(err);
       setSuccessMessage(null);
     },
   });
@@ -87,7 +89,7 @@ export default function SettingsPage() {
   if (isError) {
     return (
       <div className="rounded-lg border border-state-error/40 bg-surface p-8 text-center space-y-3">
-        <p className="text-sm font-mono text-state-error">Failed to load user settings</p>
+        <p className="text-sm font-mono text-state-error">Failed to load learning settings</p>
         <Button size="sm" variant="outline" onClick={() => refetch()} className="font-mono text-xs">
           Retry
         </Button>
@@ -108,10 +110,10 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="border-b border-border pb-6">
         <h1 className="text-2xl font-bold font-mono tracking-tight text-white">
-          Account &amp; Preferences
+          Learning Settings
         </h1>
         <p className="text-xs text-foreground-secondary mt-1">
-          Manage your study targets, timezone, and account credentials.
+          Configure study goals, timezone parameters, and historical data export archives.
         </p>
       </div>
 
@@ -208,51 +210,6 @@ export default function SettingsPage() {
           </CardFooter>
         </Card>
       </form>
-
-      {/* Account Info Card */}
-      <Card className="border-border bg-surface">
-        <CardHeader>
-          <CardTitle className="text-sm font-mono text-white flex items-center gap-2">
-            <User className="h-4 w-4 text-foreground-secondary" />
-            Profile Details
-          </CardTitle>
-          <CardDescription className="text-xs">
-            Your registered credentials and verification status
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            <div className="space-y-1">
-              <span className="text-foreground-muted font-mono">Full Name</span>
-              <p className="font-semibold text-white">{user?.name || 'Not provided'}</p>
-            </div>
-
-            <div className="space-y-1">
-              <span className="text-foreground-muted font-mono">Email Address</span>
-              <p className="font-semibold text-white">{user?.email}</p>
-            </div>
-
-            <div className="space-y-1">
-              <span className="text-foreground-muted font-mono">Email Status</span>
-              <div>
-                <Badge
-                  variant={user?.isEmailVerified ? 'default' : 'warning'}
-                  className="text-[10px]"
-                >
-                  {user?.isEmailVerified ? 'Verified' : 'Unverified'}
-                </Badge>
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <span className="text-foreground-muted font-mono">Account Created</span>
-              <p className="font-semibold text-white">
-                {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Data Portability Card */}
       <Card className="border-border bg-surface">

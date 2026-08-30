@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Bookmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { ResourceCard } from '@/components/resources/resource-card';
 import { ResourceDialog } from '@/components/resources/resource-dialog';
 import { learningApi } from '@/lib/learning-api';
@@ -12,6 +13,7 @@ import { learningApi } from '@/lib/learning-api';
 export default function ResourcesPage() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [deleteResourceId, setDeleteResourceId] = React.useState<string | null>(null);
 
   const { data: resources = [], isLoading } = useQuery({
     queryKey: ['resources'],
@@ -24,13 +26,14 @@ export default function ResourcesPage() {
 
   const deleteMutation = useMutation({
     mutationFn: learningApi.deleteResource,
-    onSuccess: handleRefresh,
+    onSuccess: () => {
+      setDeleteResourceId(null);
+      handleRefresh();
+    },
   });
 
   const handleDelete = async (id: string) => {
-    if (confirm('Delete this resource bookmark?')) {
-      await deleteMutation.mutateAsync(id);
-    }
+    setDeleteResourceId(id);
   };
 
   return (
@@ -94,6 +97,25 @@ export default function ResourcesPage() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onSuccess={handleRefresh}
+      />
+
+      {/* Delete Resource Modal */}
+      <ConfirmModal
+        open={Boolean(deleteResourceId)}
+        onOpenChange={(open) => {
+          if (!open) setDeleteResourceId(null);
+        }}
+        title="Delete Resource Bookmark"
+        description="Are you sure you want to remove this learning resource bookmark from your library?"
+        confirmLabel="Delete Bookmark"
+        variant="danger"
+        icon="delete"
+        isLoading={deleteMutation.isPending}
+        onConfirm={async () => {
+          if (deleteResourceId) {
+            await deleteMutation.mutateAsync(deleteResourceId);
+          }
+        }}
       />
     </div>
   );

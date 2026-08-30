@@ -15,17 +15,48 @@ async function main() {
     parallelism: 4,
   });
 
-  // Clean up any existing demo user data
+  // Clean up any existing demo/admin user data
   await prisma.user.deleteMany({
-    where: { email: demoEmail },
+    where: { email: { in: [demoEmail, 'admin@devlearn.io'] } },
   });
 
-  // 1. Create Demo User
-  const user = await prisma.user.create({
+  // 1. Create Superadmin User
+  const adminPassword = 'Admin123!';
+  const hashedAdminPassword = await argon2.hash(adminPassword, {
+    type: argon2.argon2id,
+    memoryCost: 65536,
+    timeCost: 3,
+    parallelism: 4,
+  });
+
+  const adminUser = await (prisma.user as any).create({
+    data: {
+      email: 'admin@devlearn.io',
+      passwordHash: hashedAdminPassword,
+      name: 'System Administrator',
+      role: 'SUPERADMIN',
+      status: 'ACTIVE',
+      isEmailVerified: true,
+      settings: {
+        create: {
+          dailyGoalMinutes: 120,
+          timezone: 'UTC',
+          theme: 'dark',
+        },
+      },
+    },
+  });
+
+  console.log(`🛡️ Created Admin User: ${adminUser.email} (Password: ${adminPassword}, Role: SUPERADMIN)`);
+
+  // 2. Create Demo User
+  const user = await (prisma.user as any).create({
     data: {
       email: demoEmail,
       passwordHash: hashedPassword,
       name: 'Alex Rivera',
+      role: 'USER',
+      status: 'ACTIVE',
       isEmailVerified: true,
       settings: {
         create: {

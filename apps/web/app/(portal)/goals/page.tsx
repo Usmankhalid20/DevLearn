@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Target, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { GoalDialog } from '@/components/goals/goal-dialog';
 import { GoalCard } from '@/components/goals/goal-card';
 import { goalsApi, type Goal } from '@/lib/goals-api';
@@ -13,6 +14,7 @@ import { learningApi } from '@/lib/learning-api';
 export default function GoalsPage() {
   const queryClient = useQueryClient();
   const [goalDialogOpen, setGoalDialogOpen] = React.useState(false);
+  const [deleteGoalId, setDeleteGoalId] = React.useState<string | null>(null);
 
   const { data: subjects = [] } = useQuery({
     queryKey: ['subjects'],
@@ -36,7 +38,10 @@ export default function GoalsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => goalsApi.deleteGoal(id),
-    onSuccess: handleRefresh,
+    onSuccess: () => {
+      setDeleteGoalId(null);
+      handleRefresh();
+    },
   });
 
   const handleToggleComplete = async (goal: Goal) => {
@@ -45,9 +50,7 @@ export default function GoalsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Delete this goal?')) {
-      await deleteMutation.mutateAsync(id);
-    }
+    setDeleteGoalId(id);
   };
 
   const activeGoals = goals.filter((g) => g.status === 'IN_PROGRESS');
@@ -142,6 +145,25 @@ export default function GoalsPage() {
         onOpenChange={setGoalDialogOpen}
         subjects={subjects}
         onSuccess={handleRefresh}
+      />
+
+      {/* Delete Goal Modal */}
+      <ConfirmModal
+        open={Boolean(deleteGoalId)}
+        onOpenChange={(open) => {
+          if (!open) setDeleteGoalId(null);
+        }}
+        title="Delete Learning Goal"
+        description="Are you sure you want to delete this learning goal? Your goal progress and target history will be permanently removed."
+        confirmLabel="Delete Goal"
+        variant="danger"
+        icon="delete"
+        isLoading={deleteMutation.isPending}
+        onConfirm={async () => {
+          if (deleteGoalId) {
+            await deleteMutation.mutateAsync(deleteGoalId);
+          }
+        }}
       />
     </div>
   );

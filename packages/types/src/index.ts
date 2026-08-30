@@ -50,6 +50,28 @@ export interface DiagnosticsDto {
   };
 }
 
+export type UserRole = 'USER' | 'ADMIN' | 'SUPER_ADMIN' | 'SUPERADMIN';
+export type UserStatus = 'ACTIVE' | 'DISABLED' | 'SUSPENDED' | 'BANNED';
+
+export type AdminPermission =
+  | 'view_users'
+  | 'manage_users'
+  | 'suspend_users'
+  | 'restore_users'
+  | 'view_learning_activity'
+  | 'view_resources'
+  | 'manage_resources'
+  | 'moderate_resources'
+  | 'view_platform_analytics'
+  | 'view_admins'
+  | 'create_admins'
+  | 'update_admin_permissions'
+  | 'disable_admins'
+  | 'view_settings'
+  | 'manage_settings'
+  | 'view_audit_logs'
+  | 'view_system_health';
+
 /**
  * Core User entity DTO
  */
@@ -57,9 +79,14 @@ export interface UserDto {
   id: string;
   email: string;
   name: string | null;
+  avatarUrl?: string | null;
+  role: UserRole;
+  status: UserStatus;
+  permissions?: AdminPermission[];
   isEmailVerified: boolean;
   createdAt: string;
   updatedAt: string;
+  lastLoginAt?: string | null;
 }
 
 export interface UserSettingsDto {
@@ -245,3 +272,183 @@ export interface AnalyticsSummaryDto {
   subjectDistribution: SubjectDistributionDto[];
   dailyActivityTrend: DailyActivityTrendDto[];
 }
+
+/**
+ * Admin Module DTOs
+ */
+export interface AdminOverviewMetricsDto {
+  totalUsers: number;
+  activeUsersLast30Days: number;
+  totalLearningHours: number;
+  totalSessionsLogged: number;
+  activeStreaksCount: number;
+  totalTasksCompleted: number;
+}
+
+export interface AdminGrowthPointDto {
+  date: string;
+  count?: number;
+  totalMinutes?: number;
+}
+
+export interface AdminPopularSubjectDto {
+  name: string;
+  totalMinutes: number;
+  userCount: number;
+}
+
+export interface AdminOverviewDto {
+  metrics: AdminOverviewMetricsDto;
+  growth: {
+    userSignupsPast30Days: AdminGrowthPointDto[];
+    studyMinutesPast30Days: AdminGrowthPointDto[];
+  };
+  popularSubjects: AdminPopularSubjectDto[];
+}
+
+export interface AdminUserListItemDto extends UserDto {
+  _count: {
+    learningSessions: number;
+    subjects: number;
+    tasks: number;
+  };
+}
+
+export interface AdminUsersListResponseDto {
+  users: AdminUserListItemDto[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+  };
+}
+
+export interface AdminTelemetryDto {
+  status: 'HEALTHY' | 'DEGRADED' | 'DOWN';
+  timestamp: string;
+  uptimeSeconds: number;
+  system: {
+    nodeVersion: string;
+    platform: string;
+    memoryUsageMb: {
+      rss: number;
+      heapTotal: number;
+      heapUsed: number;
+    };
+  };
+  database: {
+    status: 'CONNECTED' | 'DISCONNECTED' | 'ERROR';
+    latencyMs: number;
+    openConnections?: number;
+  };
+  redis: {
+    status: 'CONNECTED' | 'DISCONNECTED' | 'ERROR';
+    latencyMs: number;
+    usedMemoryKb?: number;
+  };
+}
+
+export interface AuditLogItemDto {
+  id: string;
+  action: string;
+  actor: {
+    id: string;
+    name: string | null;
+    email: string;
+  };
+  target?: {
+    id: string;
+    name: string | null;
+    email: string;
+  } | null;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  metadata?: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export interface AdminAuditLogsResponseDto {
+  logs: AuditLogItemDto[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+  };
+}
+
+export interface AdministratorDto extends UserDto {
+  permissions: AdminPermission[];
+  lastActivityAt?: string | null;
+}
+
+export interface AdministratorsListResponseDto {
+  administrators: AdministratorDto[];
+}
+
+export interface CreateAdministratorInputDto {
+  email: string;
+  name: string;
+  password?: string;
+  permissions: AdminPermission[];
+}
+
+export interface UpdateAdministratorPermissionsInputDto {
+  permissions: AdminPermission[];
+}
+
+export interface UpdateAdministratorStatusInputDto {
+  status: 'ACTIVE' | 'DISABLED' | 'SUSPENDED';
+}
+
+export interface AdminLearningActivityItemDto {
+  id: string;
+  userId: string;
+  userName: string | null;
+  userEmail: string;
+  subjectName: string;
+  durationMinutes: number;
+  date: string;
+  createdAt: string;
+}
+
+export interface AdminLearningActivityResponseDto {
+  activities: AdminLearningActivityItemDto[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+  };
+}
+
+export interface AdminResourceItemDto {
+  id: string;
+  userId: string;
+  userEmail: string;
+  title: string;
+  url: string;
+  type: string;
+  subjectName?: string | null;
+  createdAt: string;
+}
+
+export interface AdminResourcesResponseDto {
+  resources: AdminResourceItemDto[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+  };
+}
+
+export interface PlatformSettingsDto {
+  allowNewRegistrations: boolean;
+  maintenanceMode: boolean;
+  defaultDailyGoalMinutes: number;
+  systemNotification?: string | null;
+}
+
+

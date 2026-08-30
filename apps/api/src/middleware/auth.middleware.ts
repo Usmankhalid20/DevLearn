@@ -58,6 +58,11 @@ export async function requireAuth(req: Request, _res: Response, next: NextFuncti
     return;
   }
 
+  if (sessionData.user.status && sessionData.user.status !== 'ACTIVE') {
+    next(new AppError(403, 'Your account has been suspended or deactivated.', ERROR_CODES.FORBIDDEN));
+    return;
+  }
+
   req.user = sessionData.user;
   req.userSettings = sessionData.settings;
   req.sessionId = sessionData.sessionId;

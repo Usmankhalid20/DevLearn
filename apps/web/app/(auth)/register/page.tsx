@@ -18,8 +18,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useAuth } from '@/providers/auth-provider';
-import { ApiError } from '@/lib/api';
-import { Loader2 } from 'lucide-react';
+import { formatErrorMessage } from '@/lib/api';
+import { showToast } from '@/lib/toast';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 const registerSchema = z.object({
   name: z.string().trim().min(1, 'Name is required'),
@@ -61,13 +62,12 @@ export default function RegisterPage() {
     try {
       setErrorMessage(null);
       await registerUser(data);
+      showToast.success('Account created successfully! Welcome to DevLearn.');
       router.push('/dashboard');
     } catch (err) {
-      if (err instanceof ApiError) {
-        setErrorMessage(err.message);
-      } else {
-        setErrorMessage('Failed to create account. Please try again.');
-      }
+      const message = formatErrorMessage(err);
+      setErrorMessage(message);
+      showToast.error(err);
     }
   };
 
@@ -85,8 +85,9 @@ export default function RegisterPage() {
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-4">
           {errorMessage && (
-            <div className="rounded-md border border-state-error/40 bg-state-error/10 p-3 text-xs text-state-error">
-              {errorMessage}
+            <div className="flex items-center gap-2 rounded-md border border-state-error/40 bg-state-error/10 p-3 text-xs text-state-error">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{errorMessage}</span>
             </div>
           )}
 
