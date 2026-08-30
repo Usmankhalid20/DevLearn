@@ -1,0 +1,18 @@
+export const colors = {
+  background: '#090a0b',
+  surface: '#111214',
+  surfaceElevated: '#17191c',
+  border: '#23262b',
+  borderLight: '#32363e',
+  text: '#f3f4f6',
+  textSecondary: '#9ca3af',
+  textMuted: '#6b7280',
+  white: '#ffffff',
+  black: '#000000',
+  emerald: '#10b981',
+  emeraldMuted: '#064e3b',
+  emeraldText: '#34d399',
+  amber: '#f59e0b',
+  red: '#ef4444',
+  redMuted: '#450a0a',
+};
