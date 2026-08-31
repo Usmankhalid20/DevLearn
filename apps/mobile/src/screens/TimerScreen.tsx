@@ -5,12 +5,15 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  TextInput,
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { Play, Pause, RotateCcw, Check } from 'lucide-react-native';
 import { colors } from '../theme/colors';
 import { mobileApi } from '../api/client';
+import { Chip } from '../components/ui/Chip';
+import { FormInput } from '../components/ui/FormInput';
+import { formatTime } from '../utils/time';
 import type { SubjectDto } from '@devlearn/types';
 
 export function TimerScreen({ navigation }: { navigation: any }) {
@@ -44,16 +47,6 @@ export function TimerScreen({ navigation }: { navigation: any }) {
     };
   }, [isRunning]);
 
-  const formatTime = (totalSecs: number) => {
-    const hrs = Math.floor(totalSecs / 3600);
-    const mins = Math.floor((totalSecs % 3600) / 60);
-    const secs = totalSecs % 60;
-
-    return `${hrs.toString().padStart(2, '0')}:${mins
-      .toString()
-      .padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
   const handleFinishAndSave = async () => {
     if (!selectedSubjectId) {
       Alert.alert('Select Subject', 'Please select a subject for this session.');
@@ -74,11 +67,11 @@ export function TimerScreen({ navigation }: { navigation: any }) {
       });
 
       Alert.alert(
-        'Session Saved!',
+        'Session Saved',
         `Logged ${durationMinutes} minutes of focused learning.`,
         [
           {
-            text: 'OK',
+            text: 'View Dashboard',
             onPress: () => {
               setSeconds(0);
               setTopic('');
@@ -103,6 +96,8 @@ export function TimerScreen({ navigation }: { navigation: any }) {
     setSeconds(0);
   };
 
+  const estimatedMinutes = Math.max(1, Math.round(seconds / 60));
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Timer Display Card */}
@@ -112,7 +107,7 @@ export function TimerScreen({ navigation }: { navigation: any }) {
         </Text>
         <Text style={styles.timerDisplay}>{formatTime(seconds)}</Text>
         <Text style={styles.minutesEstimate}>
-          Approx. {Math.max(1, Math.round(seconds / 60))} minute(s)
+          {seconds > 0 ? `Approx. ${estimatedMinutes} minute(s)` : '0 minutes elapsed'}
         </Text>
       </View>
 
@@ -121,79 +116,99 @@ export function TimerScreen({ navigation }: { navigation: any }) {
         <TouchableOpacity
           style={[styles.mainBtn, isRunning ? styles.pauseBtn : styles.startBtn]}
           onPress={() => setIsRunning(!isRunning)}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel={isRunning ? 'Pause Timer' : seconds > 0 ? 'Resume Timer' : 'Start Focus Timer'}
         >
+          {isRunning ? (
+            <Pause size={18} color={colors.white} strokeWidth={2.5} style={styles.btnIcon} />
+          ) : (
+            <Play size={18} color={colors.black} strokeWidth={2.5} style={styles.btnIcon} />
+          )}
           <Text style={[styles.mainBtnText, isRunning && styles.pauseBtnText]}>
             {isRunning ? 'Pause Timer' : seconds > 0 ? 'Resume Timer' : 'Start Focus'}
           </Text>
         </TouchableOpacity>
 
-        {seconds > 0 && (
-          <TouchableOpacity style={styles.resetBtn} onPress={handleReset}>
-            <Text style={styles.resetBtnText}>Reset</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={[styles.resetBtn, seconds === 0 && styles.btnDisabled]}
+          onPress={handleReset}
+          disabled={seconds === 0}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Reset Timer"
+        >
+          <RotateCcw size={16} color={seconds === 0 ? colors.textMuted : colors.textSecondary} />
+          <Text style={[styles.resetBtnText, seconds === 0 && styles.disabledText]}>Reset</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Subject Selection */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Learning Subject</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsRow}>
-          {subjects.map((sub) => {
-            const isSelected = selectedSubjectId === sub.id;
-            return (
-              <TouchableOpacity
+        {subjects.length > 0 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsRow}>
+            {subjects.map((sub) => (
+              <Chip
                 key={sub.id}
-                style={[styles.chip, isSelected && styles.chipActive]}
+                label={sub.name}
+                selected={selectedSubjectId === sub.id}
                 onPress={() => setSelectedSubjectId(sub.id)}
-              >
-                <Text style={[styles.chipText, isSelected && styles.chipTextActive]}>
-                  {sub.name}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+              />
+            ))}
+          </ScrollView>
+        ) : (
+          <Text style={styles.emptySubjectText}>
+            No subjects found. Create a subject in Quick Log or Settings first.
+          </Text>
+        )}
       </View>
 
-      {/* Topic & Notes */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Topic / Focus Area (Optional)</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. Dynamic Programming Memoization"
-          placeholderTextColor={colors.textMuted}
-          value={topic}
-          onChangeText={setTopic}
-        />
-      </View>
+      {/* Topic & Notes Form */}
+      <FormInput
+        label="Topic / Focus Area (Optional)"
+        placeholder="e.g. Dynamic Programming Memoization"
+        value={topic}
+        onChangeText={setTopic}
+      />
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Notes &amp; Takeaways (Optional)</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          placeholder="Key concepts reviewed..."
-          placeholderTextColor={colors.textMuted}
-          multiline
-          numberOfLines={3}
-          value={notes}
-          onChangeText={setNotes}
-        />
-      </View>
+      <FormInput
+        label="Notes & Takeaways (Optional)"
+        placeholder="Key concepts reviewed..."
+        multiline
+        numberOfLines={3}
+        value={notes}
+        onChangeText={setNotes}
+      />
 
-      {/* Finish & Auto-Log Button */}
-      {seconds > 0 && (
-        <TouchableOpacity
-          style={styles.finishBtn}
-          onPress={handleFinishAndSave}
-          disabled={isSaving}
-        >
-          {isSaving ? (
-            <ActivityIndicator color={colors.white} />
-          ) : (
-            <Text style={styles.finishBtnText}>Finish &amp; Save Session</Text>
-          )}
-        </TouchableOpacity>
-      )}
+      {/* Finish & Save Button (Monochrome, Always Visible, Disabled when 0s) */}
+      <TouchableOpacity
+        style={[
+          styles.finishBtn,
+          (seconds === 0 || isSaving) && styles.finishBtnDisabled,
+        ]}
+        onPress={handleFinishAndSave}
+        disabled={seconds === 0 || isSaving}
+        activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel="Finish and Save Learning Session"
+      >
+        {isSaving ? (
+          <ActivityIndicator color={colors.black} />
+        ) : (
+          <View style={styles.finishContentRow}>
+            <Check size={18} color={seconds === 0 ? colors.textMuted : colors.black} strokeWidth={2.5} />
+            <Text
+              style={[
+                styles.finishBtnText,
+                seconds === 0 && styles.finishBtnTextDisabled,
+              ]}
+            >
+              Finish &amp; Save Session
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -206,6 +221,10 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
     paddingTop: 10,
+    maxWidth: 600,
+    width: '100%',
+    alignSelf: 'center',
+    paddingBottom: 40,
   },
   timerCard: {
     backgroundColor: colors.surface,
@@ -242,9 +261,13 @@ const styles = StyleSheet.create({
   },
   mainBtn: {
     flex: 1,
+    flexDirection: 'row',
     paddingVertical: 15,
+    minHeight: 52,
     borderRadius: 12,
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
   startBtn: {
     backgroundColor: colors.white,
@@ -253,6 +276,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderColor: colors.border,
     borderWidth: 1,
+  },
+  btnIcon: {
+    marginRight: 2,
   },
   mainBtnText: {
     color: colors.black,
@@ -263,18 +289,28 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
   resetBtn: {
+    flexDirection: 'row',
+    gap: 6,
     paddingHorizontal: 20,
     paddingVertical: 15,
+    minHeight: 52,
     backgroundColor: colors.surface,
     borderColor: colors.border,
     borderWidth: 1,
     borderRadius: 12,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   resetBtnText: {
     color: colors.textSecondary,
     fontSize: 14,
     fontWeight: '600',
+  },
+  btnDisabled: {
+    opacity: 0.4,
+  },
+  disabledText: {
+    color: colors.textMuted,
   },
   section: {
     marginBottom: 18,
@@ -290,53 +326,37 @@ const styles = StyleSheet.create({
   chipsRow: {
     flexDirection: 'row',
   },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    marginRight: 8,
-  },
-  chipActive: {
-    backgroundColor: colors.white,
-    borderColor: colors.white,
-  },
-  chipText: {
-    fontSize: 13,
-    color: colors.text,
-    fontWeight: '500',
-  },
-  chipTextActive: {
-    color: colors.black,
-    fontWeight: '700',
-  },
-  input: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    color: colors.white,
-    fontSize: 14,
-  },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: 'top',
+  emptySubjectText: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 4,
   },
   finishBtn: {
-    backgroundColor: colors.emerald,
+    backgroundColor: colors.white,
     paddingVertical: 15,
+    minHeight: 52,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 30,
+    justifyContent: 'center',
+    marginTop: 12,
+  },
+  finishBtnDisabled: {
+    backgroundColor: colors.surfaceElevated,
+    borderColor: colors.border,
+    borderWidth: 1,
+  },
+  finishContentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   finishBtnText: {
-    color: colors.white,
+    color: colors.black,
     fontSize: 15,
     fontWeight: '700',
   },
+  finishBtnTextDisabled: {
+    color: colors.textMuted,
+  },
 });
+

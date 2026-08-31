@@ -4,15 +4,22 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   StyleSheet,
   Modal,
   Alert,
 } from 'react-native';
+import {
+  ChevronRight,
+  LogOut,
+  Server,
+  Moon,
+  Target,
+} from 'lucide-react-native';
 import { useAuth } from '../context/auth-context';
 import { colors } from '../theme/colors';
 import { mobileApi } from '../api/client';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { FormInput } from '../components/ui/FormInput';
 
 export function SettingsScreen() {
   const { user, logout } = useAuth();
@@ -69,32 +76,43 @@ export function SettingsScreen() {
         <TouchableOpacity
           style={styles.settingItem}
           onPress={() => setApiUrlModalOpen(true)}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Edit Backend Server URL"
         >
-          <View>
-            <Text style={styles.settingLabel}>Backend Server URL</Text>
-            <Text style={styles.settingValue} numberOfLines={1}>
-              {currentApiUrl}
-            </Text>
+          <View style={styles.settingLeft}>
+            <Server size={18} color={colors.textSecondary} style={styles.settingIcon} />
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingLabel}>Backend Server URL</Text>
+              <Text style={styles.settingValue} numberOfLines={1}>
+                {currentApiUrl}
+              </Text>
+            </View>
           </View>
-          <Text style={styles.settingAction}>Edit ➔</Text>
+          <ChevronRight size={16} color={colors.textMuted} />
         </TouchableOpacity>
 
         {/* Theme Display */}
         <View style={styles.settingItem}>
-          <View>
-            <Text style={styles.settingLabel}>Visual Theme</Text>
-            <Text style={styles.settingValue}>Monochrome Dark (Active)</Text>
+          <View style={styles.settingLeft}>
+            <Moon size={18} color={colors.textSecondary} style={styles.settingIcon} />
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingLabel}>Visual Theme</Text>
+              <Text style={styles.settingValue}>Monochrome Dark (Default)</Text>
+            </View>
           </View>
-          <Text style={styles.themeIndicator}>🖤</Text>
         </View>
 
         {/* Daily Goal */}
         <View style={styles.settingItem}>
-          <View>
-            <Text style={styles.settingLabel}>Daily Focus Target</Text>
-            <Text style={styles.settingValue}>
-              {user?.settings?.dailyGoalMinutes || 60} minutes / day
-            </Text>
+          <View style={styles.settingLeft}>
+            <Target size={18} color={colors.textSecondary} style={styles.settingIcon} />
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingLabel}>Daily Focus Target</Text>
+              <Text style={styles.settingValue}>
+                {user?.settings?.dailyGoalMinutes || 60} minutes / day
+              </Text>
+            </View>
           </View>
         </View>
       </View>
@@ -103,7 +121,11 @@ export function SettingsScreen() {
       <TouchableOpacity
         style={styles.logoutButton}
         onPress={() => setLogoutModalOpen(true)}
+        activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel="Sign Out of DevLearn"
       >
+        <LogOut size={16} color={colors.red} style={{ marginRight: 8 }} />
         <Text style={styles.logoutButtonText}>Sign Out of DevLearn</Text>
       </TouchableOpacity>
 
@@ -135,10 +157,8 @@ export function SettingsScreen() {
               If testing on a physical phone via Expo Go, enter your computer's local Wi-Fi IP (e.g. http://192.168.1.10:5000/api).
             </Text>
 
-            <TextInput
-              style={styles.modalInput}
+            <FormInput
               placeholder="http://192.168.1.X:5000/api"
-              placeholderTextColor={colors.textMuted}
               autoCapitalize="none"
               autoCorrect={false}
               value={inputApiUrl}
@@ -149,6 +169,7 @@ export function SettingsScreen() {
               <TouchableOpacity
                 style={styles.modalCancelBtn}
                 onPress={() => setApiUrlModalOpen(false)}
+                activeOpacity={0.7}
               >
                 <Text style={styles.modalCancelText}>Cancel</Text>
               </TouchableOpacity>
@@ -156,6 +177,7 @@ export function SettingsScreen() {
               <TouchableOpacity
                 style={styles.modalSaveBtn}
                 onPress={handleSaveApiUrl}
+                activeOpacity={0.8}
               >
                 <Text style={styles.modalSaveText}>Save URL</Text>
               </TouchableOpacity>
@@ -175,6 +197,10 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
     paddingTop: 10,
+    maxWidth: 600,
+    width: '100%',
+    alignSelf: 'center',
+    paddingBottom: 40,
   },
   card: {
     backgroundColor: colors.surface,
@@ -255,6 +281,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     marginBottom: 8,
+    minHeight: 52,
+  },
+  settingLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 10,
+  },
+  settingIcon: {
+    marginRight: 12,
+  },
+  settingTextContainer: {
+    flex: 1,
   },
   settingLabel: {
     fontSize: 14,
@@ -264,23 +303,17 @@ const styles = StyleSheet.create({
   settingValue: {
     fontSize: 12,
     color: colors.textSecondary,
-    marginTop: 3,
-    maxWidth: 240,
-  },
-  settingAction: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.textSecondary,
-  },
-  themeIndicator: {
-    fontSize: 16,
+    marginTop: 2,
   },
   logoutButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     backgroundColor: colors.surface,
     borderColor: colors.redMuted,
     borderWidth: 1,
     borderRadius: 12,
     paddingVertical: 14,
+    minHeight: 48,
     alignItems: 'center',
     marginTop: 10,
     marginBottom: 30,
@@ -318,28 +351,20 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     marginBottom: 14,
   },
-  modalInput: {
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    color: colors.white,
-    fontSize: 13,
-    marginBottom: 16,
-  },
   modalFooter: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: 10,
+    marginTop: 8,
   },
   modalCancelBtn: {
-    paddingVertical: 8,
+    paddingVertical: 9,
     paddingHorizontal: 14,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalCancelText: {
     fontSize: 13,
@@ -347,9 +372,11 @@ const styles = StyleSheet.create({
   },
   modalSaveBtn: {
     backgroundColor: colors.white,
-    paddingVertical: 8,
+    paddingVertical: 9,
     paddingHorizontal: 16,
     borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalSaveText: {
     fontSize: 13,
@@ -357,3 +384,4 @@ const styles = StyleSheet.create({
     color: colors.black,
   },
 });
+

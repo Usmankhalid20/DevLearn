@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
@@ -13,6 +12,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../context/auth-context';
 import { colors } from '../theme/colors';
+import { FormInput } from '../components/ui/FormInput';
 
 export function RegisterScreen({ navigation }: { navigation: any }) {
   const { register } = useAuth();
@@ -24,6 +24,11 @@ export function RegisterScreen({ navigation }: { navigation: any }) {
   const handleRegister = async () => {
     if (!name.trim() || !email.trim() || !password.trim()) {
       Alert.alert('Required Fields', 'Please complete all registration fields.');
+      return;
+    }
+
+    if (password.trim().length < 8) {
+      Alert.alert('Weak Password', 'Password must be at least 8 characters long.');
       return;
     }
 
@@ -57,46 +62,39 @@ export function RegisterScreen({ navigation }: { navigation: any }) {
 
         {/* Form Card */}
         <View style={styles.formCard}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Full Name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="John Doe"
-              placeholderTextColor={colors.textMuted}
-              value={name}
-              onChangeText={setName}
-            />
-          </View>
+          <FormInput
+            label="Full Name"
+            placeholder="John Doe"
+            value={name}
+            onChangeText={setName}
+            autoCapitalize="words"
+          />
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email Address</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="user@example.com"
-              placeholderTextColor={colors.textMuted}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
-            />
-          </View>
+          <FormInput
+            label="Email Address"
+            placeholder="user@example.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            value={email}
+            onChangeText={setEmail}
+          />
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Minimum 8 characters"
-              placeholderTextColor={colors.textMuted}
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
-          </View>
+          <FormInput
+            label="Password"
+            placeholder="Minimum 8 characters"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
 
           <TouchableOpacity
             style={styles.submitButton}
             onPress={handleRegister}
             disabled={isLoading}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Create Account"
           >
             {isLoading ? (
               <ActivityIndicator color={colors.black} />
@@ -109,7 +107,11 @@ export function RegisterScreen({ navigation }: { navigation: any }) {
         {/* Switch to Login */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>Already have an account? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Login')}
+            accessibilityRole="button"
+            accessibilityLabel="Sign In"
+          >
             <Text style={styles.footerLink}>Sign In</Text>
           </TouchableOpacity>
         </View>
@@ -127,6 +129,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     padding: 24,
+    maxWidth: 440,
+    width: '100%',
+    alignSelf: 'center',
   },
   brandContainer: {
     alignItems: 'center',
@@ -164,31 +169,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 24,
   },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    color: colors.white,
-    fontSize: 14,
-  },
   submitButton: {
     backgroundColor: colors.white,
     borderRadius: 8,
-    paddingVertical: 13,
+    paddingVertical: 14,
+    minHeight: 48,
+    justifyContent: 'center',
     alignItems: 'center',
     marginTop: 8,
   },
@@ -200,7 +186,9 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
+    alignItems: 'center',
     marginTop: 24,
+    minHeight: 44,
   },
   footerText: {
     color: colors.textSecondary,
@@ -213,3 +201,4 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
 });
+

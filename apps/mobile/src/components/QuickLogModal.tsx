@@ -1,17 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { X } from 'lucide-react-native';
 import { colors } from '../theme/colors';
 import { mobileApi } from '../api/client';
+import { Chip } from './ui/Chip';
+import { FormInput } from './ui/FormInput';
 import type { SubjectDto } from '@devlearn/types';
 
 interface QuickLogModalProps {
@@ -29,17 +31,29 @@ export function QuickLogModal({
   onClose,
   onSuccess,
 }: QuickLogModalProps) {
-  const [selectedSubjectId, setSelectedSubjectId] = useState<string>(
-    subjects[0]?.id || ''
-  );
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
   const [durationMinutes, setDurationMinutes] = useState<number>(30);
   const [customMinutes, setCustomMinutes] = useState<string>('30');
   const [topic, setTopic] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+  const [newSubjectName, setNewSubjectName] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  // New subject input if no subjects exist
-  const [newSubjectName, setNewSubjectName] = useState<string>('');
+  // Reset form whenever modal opens
+  useEffect(() => {
+    if (visible) {
+      if (subjects.length > 0) {
+        setSelectedSubjectId(subjects[0].id);
+      } else {
+        setSelectedSubjectId('');
+      }
+      setDurationMinutes(30);
+      setCustomMinutes('30');
+      setTopic('');
+      setNotes('');
+      setNewSubjectName('');
+    }
+  }, [visible, subjects]);
 
   const handleSubmit = async () => {
     let subjectId = selectedSubjectId;
@@ -69,9 +83,6 @@ export function QuickLogModal({
         learnedNotes: notes.trim() || undefined,
       });
 
-      // Reset form
-      setTopic('');
-      setNotes('');
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -96,11 +107,17 @@ export function QuickLogModal({
           {/* Header */}
           <View style={styles.header}>
             <View>
-              <Text style={styles.title}>+ Quick Log Learning</Text>
-              <Text style={styles.subtitle}>Record your study time in 3 seconds</Text>
+              <Text style={styles.title}>Log Learning</Text>
+              <Text style={styles.subtitle}>Record your study time in seconds</Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Text style={styles.closeText}>✕</Text>
+            <TouchableOpacity
+              onPress={onClose}
+              style={styles.closeBtn}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+            >
+              <X size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -113,34 +130,18 @@ export function QuickLogModal({
                 showsHorizontalScrollIndicator={false}
                 style={styles.subjectRow}
               >
-                {subjects.map((sub) => {
-                  const isSelected = selectedSubjectId === sub.id;
-                  return (
-                    <TouchableOpacity
-                      key={sub.id}
-                      style={[
-                        styles.subjectChip,
-                        isSelected && styles.subjectChipActive,
-                      ]}
-                      onPress={() => setSelectedSubjectId(sub.id)}
-                    >
-                      <Text
-                        style={[
-                          styles.subjectChipText,
-                          isSelected && styles.subjectChipTextActive,
-                        ]}
-                      >
-                        {sub.name}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+                {subjects.map((sub) => (
+                  <Chip
+                    key={sub.id}
+                    label={sub.name}
+                    selected={selectedSubjectId === sub.id}
+                    onPress={() => setSelectedSubjectId(sub.id)}
+                  />
+                ))}
               </ScrollView>
             ) : (
-              <TextInput
-                style={styles.input}
+              <FormInput
                 placeholder="e.g. Data Structures, React, Python"
-                placeholderTextColor={colors.textMuted}
                 value={newSubjectName}
                 onChangeText={setNewSubjectName}
               />
@@ -151,61 +152,43 @@ export function QuickLogModal({
               2. Duration (Minutes)
             </Text>
             <View style={styles.presetRow}>
-              {PRESET_MINUTES.map((m) => {
-                const isSelected = durationMinutes === m;
-                return (
-                  <TouchableOpacity
-                    key={m}
-                    style={[
-                      styles.presetChip,
-                      isSelected && styles.presetChipActive,
-                    ]}
-                    onPress={() => {
-                      setDurationMinutes(m);
-                      setCustomMinutes(String(m));
-                    }}
-                  >
-                    <Text
-                      style={[
-                        styles.presetChipText,
-                        isSelected && styles.presetChipTextActive,
-                      ]}
-                    >
-                      {m}m
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+              {PRESET_MINUTES.map((m) => (
+                <Chip
+                  key={m}
+                  label={`${m}m`}
+                  selected={durationMinutes === m}
+                  style={styles.presetChip}
+                  onPress={() => {
+                    setDurationMinutes(m);
+                    setCustomMinutes(String(m));
+                  }}
+                />
+              ))}
             </View>
 
-            <TextInput
-              style={[styles.input, { marginTop: 10 }]}
+            <FormInput
               placeholder="Or enter custom minutes"
-              placeholderTextColor={colors.textMuted}
               keyboardType="number-pad"
               value={customMinutes}
               onChangeText={(val) => {
                 setCustomMinutes(val);
                 setDurationMinutes(parseInt(val, 10) || 0);
               }}
+              containerStyle={{ marginTop: 8 }}
             />
 
             {/* Optional Topic / Notes */}
-            <Text style={[styles.label, { marginTop: 16 }]}>
-              3. Topic or Notes (Optional)
+            <Text style={[styles.label, { marginTop: 8 }]}>
+              3. Topic &amp; Notes (Optional)
             </Text>
-            <TextInput
-              style={styles.input}
+            <FormInput
               placeholder="What did you work on? (e.g. Graph BFS)"
-              placeholderTextColor={colors.textMuted}
               value={topic}
               onChangeText={setTopic}
             />
 
-            <TextInput
-              style={[styles.input, styles.textArea, { marginTop: 8 }]}
+            <FormInput
               placeholder="Key takeaways or summary..."
-              placeholderTextColor={colors.textMuted}
               multiline
               numberOfLines={3}
               value={notes}
@@ -219,6 +202,9 @@ export function QuickLogModal({
               style={styles.submitBtn}
               onPress={handleSubmit}
               disabled={isSubmitting}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Save Learning Session"
             >
               {isSubmitting ? (
                 <ActivityIndicator color={colors.black} />
@@ -271,10 +257,6 @@ const styles = StyleSheet.create({
   closeBtn: {
     padding: 6,
   },
-  closeText: {
-    fontSize: 16,
-    color: colors.textMuted,
-  },
   body: {
     padding: 20,
   },
@@ -290,67 +272,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 4,
   },
-  subjectChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceElevated,
-    marginRight: 8,
-  },
-  subjectChipActive: {
-    backgroundColor: colors.white,
-    borderColor: colors.white,
-  },
-  subjectChipText: {
-    fontSize: 13,
-    color: colors.text,
-    fontWeight: '500',
-  },
-  subjectChipTextActive: {
-    color: colors.black,
-    fontWeight: '700',
-  },
   presetRow: {
     flexDirection: 'row',
-    gap: 8,
+    marginBottom: 4,
   },
   presetChip: {
     flex: 1,
-    paddingVertical: 9,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceElevated,
-    alignItems: 'center',
-  },
-  presetChipActive: {
-    backgroundColor: colors.white,
-    borderColor: colors.white,
-  },
-  presetChipText: {
-    fontSize: 13,
-    color: colors.text,
-    fontWeight: '600',
-  },
-  presetChipTextActive: {
-    color: colors.black,
-    fontWeight: '700',
-  },
-  input: {
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    color: colors.white,
-    fontSize: 14,
-  },
-  textArea: {
-    minHeight: 70,
-    textAlignVertical: 'top',
+    marginRight: 6,
   },
   footer: {
     paddingHorizontal: 20,
@@ -358,7 +286,8 @@ const styles = StyleSheet.create({
   },
   submitBtn: {
     backgroundColor: colors.white,
-    paddingVertical: 13,
+    paddingVertical: 14,
+    minHeight: 48,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
@@ -369,3 +298,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
+

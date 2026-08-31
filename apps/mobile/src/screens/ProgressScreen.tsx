@@ -7,8 +7,10 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
+import { Flame, Trophy } from 'lucide-react-native';
 import { colors } from '../theme/colors';
 import { mobileApi } from '../api/client';
+import { formatHoursMins, calculateTodayMinutes } from '../utils/time';
 import type { AnalyticsSummaryDto, StreakSummaryDto, LearningSessionDto } from '@devlearn/types';
 
 export function ProgressScreen() {
@@ -30,8 +32,8 @@ export function ProgressScreen() {
       setStreak(streakData);
 
       const todayStr = new Date().toISOString().split('T')[0];
-      const filtered = (sessionsData as LearningSessionDto[]).filter(
-        (s: LearningSessionDto) => s.date?.startsWith(todayStr) || s.createdAt?.startsWith(todayStr)
+      const filtered = sessionsData.filter(
+        (s) => s.date?.startsWith(todayStr) || s.createdAt?.startsWith(todayStr)
       );
       setTodaySessions(filtered);
     } catch {
@@ -53,21 +55,12 @@ export function ProgressScreen() {
 
   // Group today's sessions by subject
   const subjectBreakdown: { [name: string]: number } = {};
-  let totalTodayMinutes = 0;
-
   todaySessions.forEach((s) => {
     const name = s.subject?.name || 'General';
     subjectBreakdown[name] = (subjectBreakdown[name] || 0) + s.durationMinutes;
-    totalTodayMinutes += s.durationMinutes;
   });
 
-  const formatHoursMins = (totalMins: number) => {
-    const hrs = Math.floor(totalMins / 60);
-    const mins = totalMins % 60;
-    if (hrs === 0) return `${mins}m`;
-    if (mins === 0) return `${hrs}h`;
-    return `${hrs}h ${mins}m`;
-  };
+  const totalTodayMinutes = calculateTodayMinutes(todaySessions);
 
   return (
     <ScrollView
@@ -126,13 +119,13 @@ export function ProgressScreen() {
 
             <View style={styles.streakGrid}>
               <View style={styles.streakMetric}>
-                <Text style={styles.metricEmoji}>🔥</Text>
+                <Flame size={20} color={colors.white} strokeWidth={2.5} style={styles.metricIcon} />
                 <Text style={styles.metricVal}>{streak?.currentStreak || 0} Days</Text>
                 <Text style={styles.metricLabel}>Current Streak</Text>
               </View>
 
               <View style={styles.streakMetric}>
-                <Text style={styles.metricEmoji}>🏆</Text>
+                <Trophy size={20} color={colors.white} strokeWidth={2} style={styles.metricIcon} />
                 <Text style={styles.metricVal}>{streak?.longestStreak || 0} Days</Text>
                 <Text style={styles.metricLabel}>Longest Streak</Text>
               </View>
@@ -147,9 +140,9 @@ export function ProgressScreen() {
                 const dayStr = date.toISOString().split('T')[0];
                 const dayName = date.toLocaleDateString(undefined, { weekday: 'narrow' });
 
-                // Check if user had any session on this day
-                const hasSession = (summary as any)?.dailyBreakdown?.some(
-                  (d: any) => d.date?.startsWith(dayStr) && d.minutes > 0
+                // Check dailyActivityTrend from backend analytics summary
+                const hasSession = summary?.dailyActivityTrend?.some(
+                  (d) => d.date?.startsWith(dayStr) && d.minutes > 0
                 ) || (daysAgo === 0 && totalTodayMinutes > 0);
 
                 return (
@@ -201,6 +194,10 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
     paddingTop: 10,
+    maxWidth: 600,
+    width: '100%',
+    alignSelf: 'center',
+    paddingBottom: 40,
   },
   loaderContainer: {
     paddingVertical: 60,
@@ -234,7 +231,7 @@ const styles = StyleSheet.create({
   cardHighlight: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.emerald,
+    color: colors.white,
   },
   emptyText: {
     fontSize: 12,
@@ -285,9 +282,8 @@ const styles = StyleSheet.create({
     padding: 14,
     alignItems: 'center',
   },
-  metricEmoji: {
-    fontSize: 20,
-    marginBottom: 4,
+  metricIcon: {
+    marginBottom: 6,
   },
   metricVal: {
     fontSize: 16,
@@ -350,3 +346,4 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 });
+

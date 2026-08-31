@@ -21,7 +21,8 @@ export class EmailService {
   }
 
   async sendVerificationEmail(to: string, name: string | null, token: string): Promise<void> {
-    const verifyUrl = `${env.WEB_ORIGIN}/verify-email?token=${token}`;
+    const primaryWebOrigin = env.WEB_ORIGIN.split(',')[0].trim();
+    const verifyUrl = `${primaryWebOrigin}/verify-email?token=${token}`;
 
     if (!this.transporter || env.NODE_ENV === 'test') {
       logger.info({ to, verifyUrl }, '📧 [DEV EMAIL MOCK] Email Verification Link Generated');
@@ -52,7 +53,9 @@ export class EmailService {
   }
 
   async sendPasswordResetEmail(to: string, name: string | null, token: string): Promise<void> {
-    const resetUrl = `${env.WEB_ORIGIN}/reset-password?token=${token}`;
+    const primaryWebOrigin = env.WEB_ORIGIN.split(',')[0].trim();
+    const resetUrl = `${primaryWebOrigin}/reset-password?token=${token}`;
+
 
     if (!this.transporter || env.NODE_ENV === 'test') {
       logger.info({ to, resetUrl }, '📧 [DEV EMAIL MOCK] Password Reset Link Generated');

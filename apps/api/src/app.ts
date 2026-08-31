@@ -39,15 +39,36 @@ export function createApp() {
     })
   );
 
-  // CORS Configuration
+  // CORS Configuration — supports comma-separated WEB_ORIGIN for multiple clients (web + mobile dev)
+  const allowedOrigins = env.WEB_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean);
   app.use(
     cors({
-      origin: env.WEB_ORIGIN,
+      origin: (origin, callback) => {
+        // Allow requests with no origin (mobile native apps, Expo Go native, Postman, curl, server-to-server)
+        if (!origin) return callback(null, true);
+
+        // Allow explicitly configured origins
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+
+        // In non-production environments, allow local development origins (localhost, 127.0.0.1, Expo Web, LAN IPs)
+        if (env.NODE_ENV !== 'production') {
+          const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+          const isLocalIp = /^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(:\d+)?$/.test(origin);
+          if (isLocalhost || isLocalIp) {
+            return callback(null, true);
+          }
+        }
+
+        // Return false to deny CORS cleanly without crashing the preflight handler
+        callback(null, false);
+      },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],
+      optionsSuccessStatus: 204,
     })
   );
+
 
   // Request Tracking & Parsing
   app.use(requestIdMiddleware);
@@ -69,10 +90,12 @@ export function createApp() {
   apiRouter.use('/auth', authRouter);
   apiRouter.use('/users', usersRouter);
   apiRouter.use('/subjects', subjectsRouter);
+  apiRouter.use('/learning/subjects', subjectsRouter);
   apiRouter.use('/tasks', tasksRouter);
   apiRouter.use('/courses', coursesRouter);
   apiRouter.use('/learning-sessions', learningRouter);
   apiRouter.use('/learning/sessions', learningRouter);
+
   apiRouter.use('/resources', resourcesRouter);
   apiRouter.use('/contributions', contributionsRouter);
   apiRouter.use('/analytics', analyticsRouter);

@@ -1,8 +1,15 @@
 import React from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import {
+  Home,
+  Timer as TimerIcon,
+  BookOpen,
+  BarChart2,
+  Settings as SettingsIcon,
+} from 'lucide-react-native';
 import { useAuth } from '../context/auth-context';
 import { colors } from '../theme/colors';
 
@@ -18,12 +25,6 @@ import { SettingsScreen } from '../screens/SettingsScreen';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-const TabNavigator = Tab.Navigator as any;
-const TabScreen = Tab.Screen as any;
-const StackNavigator = Stack.Navigator as any;
-const StackScreen = Stack.Screen as any;
-const NavContainer = NavigationContainer as any;
-
 // Monochrome navigation theme
 const darkTheme = {
   ...DefaultTheme,
@@ -35,20 +36,20 @@ const darkTheme = {
     text: colors.text,
     border: colors.border,
     primary: colors.white,
+    notification: colors.white,
   },
 };
 
 function MainTabNavigator() {
   return (
-    <TabNavigator
+    <Tab.Navigator
       screenOptions={{
         headerStyle: {
           backgroundColor: colors.background,
           borderBottomWidth: 1,
           borderBottomColor: colors.border,
-          elevation: 0,
-          shadowOpacity: 0,
         },
+
         headerTitleStyle: {
           fontWeight: '700',
           fontSize: 16,
@@ -58,8 +59,6 @@ function MainTabNavigator() {
           backgroundColor: colors.surface,
           borderTopWidth: 1,
           borderTopColor: colors.border,
-          height: 60,
-          paddingBottom: 8,
           paddingTop: 6,
         },
         tabBarActiveTintColor: colors.white,
@@ -67,65 +66,62 @@ function MainTabNavigator() {
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
+          marginTop: -2,
+          paddingBottom: 4,
         },
       }}
     >
-      <TabScreen
+      <Tab.Screen
         name="Dashboard"
         component={DashboardScreen}
         options={{
-          title: 'Dashboard',
+          title: 'DevLearn',
           tabBarLabel: 'Home',
-          tabBarIcon: ({ color }: { color: string }) => (
-            <Text style={{ color, fontSize: 18 }}>🏠</Text>
-          ),
+          tabBarAccessibilityLabel: 'Home Tab',
+          tabBarIcon: ({ color, size }) => <Home size={size - 2} color={color} strokeWidth={2} />,
         }}
       />
-      <TabScreen
+      <Tab.Screen
         name="Timer"
         component={TimerScreen}
         options={{
           title: 'Focus Timer',
           tabBarLabel: 'Timer',
-          tabBarIcon: ({ color }: { color: string }) => (
-            <Text style={{ color, fontSize: 18 }}>⏱️</Text>
-          ),
+          tabBarAccessibilityLabel: 'Timer Tab',
+          tabBarIcon: ({ color, size }) => <TimerIcon size={size - 2} color={color} strokeWidth={2} />,
         }}
       />
-      <TabScreen
+      <Tab.Screen
         name="History"
         component={HistoryScreen}
         options={{
           title: 'Learning History',
           tabBarLabel: 'History',
-          tabBarIcon: ({ color }: { color: string }) => (
-            <Text style={{ color, fontSize: 18 }}>📜</Text>
-          ),
+          tabBarAccessibilityLabel: 'History Tab',
+          tabBarIcon: ({ color, size }) => <BookOpen size={size - 2} color={color} strokeWidth={2} />,
         }}
       />
-      <TabScreen
+      <Tab.Screen
         name="Progress"
         component={ProgressScreen}
         options={{
-          title: 'Study Progress',
+          title: 'Progress & Streaks',
           tabBarLabel: 'Progress',
-          tabBarIcon: ({ color }: { color: string }) => (
-            <Text style={{ color, fontSize: 18 }}>📊</Text>
-          ),
+          tabBarAccessibilityLabel: 'Progress Tab',
+          tabBarIcon: ({ color, size }) => <BarChart2 size={size - 2} color={color} strokeWidth={2} />,
         }}
       />
-      <TabScreen
+      <Tab.Screen
         name="Settings"
         component={SettingsScreen}
         options={{
-          title: 'Settings & Profile',
+          title: 'Settings',
           tabBarLabel: 'Settings',
-          tabBarIcon: ({ color }: { color: string }) => (
-            <Text style={{ color, fontSize: 18 }}>⚙️</Text>
-          ),
+          tabBarAccessibilityLabel: 'Settings Tab',
+          tabBarIcon: ({ color, size }) => <SettingsIcon size={size - 2} color={color} strokeWidth={2} />,
         }}
       />
-    </TabNavigator>
+    </Tab.Navigator>
   );
 }
 
@@ -148,17 +144,18 @@ export function RootNavigator() {
   }
 
   return (
-    <NavContainer theme={darkTheme}>
-      <StackNavigator screenOptions={{ headerShown: false }}>
+    <NavigationContainer theme={darkTheme}>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
         {isAuthenticated ? (
-          <StackScreen name="Main" component={MainTabNavigator} />
+          <Stack.Screen name="Main" component={MainTabNavigator} />
         ) : (
-          <>
-            <StackScreen name="Login" component={LoginScreen} />
-            <StackScreen name="Register" component={RegisterScreen} />
-          </>
+          <Stack.Group screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+          </Stack.Group>
         )}
-      </StackNavigator>
-    </NavContainer>
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
+

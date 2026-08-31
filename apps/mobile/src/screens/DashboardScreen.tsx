@@ -8,10 +8,13 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
+import { Flame, Plus, Timer as TimerIcon } from 'lucide-react-native';
 import { useAuth } from '../context/auth-context';
 import { colors } from '../theme/colors';
 import { mobileApi } from '../api/client';
 import { QuickLogModal } from '../components/QuickLogModal';
+import { LearningSessionCard } from '../components/LearningSessionCard';
+import { formatHoursMins, getGreeting, calculateTodayMinutes } from '../utils/time';
 import type { SubjectDto, LearningSessionDto, StreakSummaryDto } from '@devlearn/types';
 
 export function DashboardScreen({ navigation }: { navigation: any }) {
@@ -27,14 +30,14 @@ export function DashboardScreen({ navigation }: { navigation: any }) {
     try {
       const [subjectsData, sessionsData, streakData] = await Promise.all([
         mobileApi.getSubjects().catch(() => []),
-        mobileApi.getSessions(5).catch(() => []),
+        mobileApi.getSessions(20).catch(() => []),
         mobileApi.getStreaks().catch(() => null),
       ]);
 
       setSubjects(subjectsData);
       setRecentSessions(sessionsData);
       setStreak(streakData);
-    } catch (err) {
+    } catch {
       // Ignore
     } finally {
       setIsLoading(false);
@@ -51,21 +54,10 @@ export function DashboardScreen({ navigation }: { navigation: any }) {
     loadData();
   };
 
-  // Calculate today's minutes
-  const todayStr = new Date().toISOString().split('T')[0];
-  const todayMinutes = recentSessions
-    .filter((s) => s.date?.startsWith(todayStr) || s.createdAt?.startsWith(todayStr))
-    .reduce((acc, s) => acc + s.durationMinutes, 0);
-
+  // Calculate today's minutes from sessions
+  const todayMinutes = calculateTodayMinutes(recentSessions);
   const dailyGoalMinutes = user?.settings?.dailyGoalMinutes || 60;
   const progressPercent = Math.min(Math.round((todayMinutes / dailyGoalMinutes) * 100), 100);
-
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
-  };
 
   return (
     <View style={styles.container}>
@@ -89,7 +81,7 @@ export function DashboardScreen({ navigation }: { navigation: any }) {
           </View>
 
           <View style={styles.streakBadge}>
-            <Text style={styles.streakEmoji}>🔥</Text>
+            <Flame size={14} color={colors.white} strokeWidth={2.5} />
             <Text style={styles.streakCount}>
               {streak?.currentStreak || 0}d
             </Text>
@@ -106,7 +98,9 @@ export function DashboardScreen({ navigation }: { navigation: any }) {
             <View style={styles.card}>
               <View style={styles.cardHeader}>
                 <Text style={styles.cardLabel}>Today's Learning Focus</Text>
-                <Text style={styles.cardValue}>{todayMinutes}m / {dailyGoalMinutes}m</Text>
+                <Text style={styles.cardValue}>
+                  {formatHoursMins(todayMinutes)} / {formatHoursMins(dailyGoalMinutes)}
+                </Text>
               </View>
 
               {/* Progress Bar */}
@@ -122,8 +116,8 @@ export function DashboardScreen({ navigation }: { navigation: any }) {
               <View style={styles.cardFooter}>
                 <Text style={styles.cardFooterText}>
                   {progressPercent >= 100
-                    ? '🎉 Daily goal achieved!'
-                    : `${dailyGoalMinutes - todayMinutes} minutes remaining to hit daily goal`}
+                    ? 'Daily target completed'
+                    : `${dailyGoalMinutes - todayMinutes}m remaining to hit daily target`}
                 </Text>
                 <Text style={styles.cardPercentText}>{progressPercent}%</Text>
               </View>
@@ -134,52 +128,54 @@ export function DashboardScreen({ navigation }: { navigation: any }) {
               <TouchableOpacity
                 style={styles.primaryActionBtn}
                 onPress={() => setQuickLogOpen(true)}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel="Log Learning Session"
               >
-                <Text style={styles.primaryActionBtnText}>+ Log Learning</Text>
+                <Plus size={16} color={colors.black} strokeWidth={2.5} />
+                <Text style={styles.primaryActionBtnText}>Log Learning</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.secondaryActionBtn}
                 onPress={() => navigation.navigate('Timer')}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel="Open Focus Timer"
               >
-                <Text style={styles.secondaryActionBtnText}>⏱️ Focus Timer</Text>
+                <TimerIcon size={16} color={colors.white} strokeWidth={2} />
+                <Text style={styles.secondaryActionBtnText}>Focus Timer</Text>
               </TouchableOpacity>
             </View>
 
             {/* Recent Sessions */}
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Recent Sessions</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('History')}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('History')}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityRole="button"
+                accessibilityLabel="View all learning history"
+              >
                 <Text style={styles.sectionLink}>View All</Text>
               </TouchableOpacity>
             </View>
 
             {recentSessions.length === 0 ? (
               <View style={styles.emptyState}>
-                <Text style={styles.emptyTitle}>No sessions logged today</Text>
+                <Text style={styles.emptyTitle}>No sessions logged yet</Text>
                 <Text style={styles.emptySubtitle}>
-                  Tap &quot;+ Log Learning&quot; or start a timer to begin your streak!
+                  Tap &quot;Log Learning&quot; or start a timer to begin your streak!
                 </Text>
               </View>
             ) : (
-              recentSessions.map((session) => (
-                <View key={session.id} style={styles.sessionItem}>
-                  <View style={styles.sessionLeft}>
-                    <Text style={styles.sessionSubject}>
-                      {session.subject?.name || 'General'}
-                    </Text>
-                    {session.topic ? (
-                      <Text style={styles.sessionTopic} numberOfLines={1}>
-                        {session.topic}
-                      </Text>
-                    ) : null}
-                  </View>
-                  <View style={styles.sessionBadge}>
-                    <Text style={styles.sessionMinutes}>
-                      {session.durationMinutes}m
-                    </Text>
-                  </View>
-                </View>
+              recentSessions.slice(0, 5).map((session) => (
+                <LearningSessionCard
+                  key={session.id}
+                  session={session}
+                  compact
+                  showDate
+                />
               ))
             )}
           </>
@@ -205,6 +201,10 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
     paddingTop: 10,
+    maxWidth: 600,
+    width: '100%',
+    alignSelf: 'center',
+    paddingBottom: 40,
   },
   header: {
     flexDirection: 'row',
@@ -232,10 +232,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    gap: 4,
-  },
-  streakEmoji: {
-    fontSize: 14,
+    gap: 6,
   },
   streakCount: {
     fontSize: 13,
@@ -305,10 +302,14 @@ const styles = StyleSheet.create({
   },
   primaryActionBtn: {
     flex: 1.2,
+    flexDirection: 'row',
     backgroundColor: colors.white,
     paddingVertical: 14,
+    minHeight: 48,
     borderRadius: 12,
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
   },
   primaryActionBtnText: {
     color: colors.black,
@@ -317,12 +318,16 @@ const styles = StyleSheet.create({
   },
   secondaryActionBtn: {
     flex: 1,
+    flexDirection: 'row',
     backgroundColor: colors.surface,
     borderColor: colors.border,
     borderWidth: 1,
     paddingVertical: 14,
+    minHeight: 48,
     borderRadius: 12,
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
   },
   secondaryActionBtnText: {
     color: colors.white,
@@ -364,43 +369,5 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
   },
-  sessionItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 13,
-    marginBottom: 8,
-  },
-  sessionLeft: {
-    flex: 1,
-    marginRight: 10,
-  },
-  sessionSubject: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.white,
-  },
-  sessionTopic: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  sessionBadge: {
-    backgroundColor: colors.surfaceElevated,
-    borderColor: colors.borderLight,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  sessionMinutes: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.white,
-  },
 });
+
