@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "DevLearn",
+    "slug": "devlearn",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0c0d0e",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "userInterfaceStyle": "dark",
+      "bundleIdentifier": "io.devlearn.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0c0d0e"
+      },
+      "userInterfaceStyle": "dark",
+      "package": "io.devlearn.app"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": []
+  }
+}

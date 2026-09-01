@@ -87,12 +87,19 @@ export interface UserDto {
   createdAt: string;
   updatedAt: string;
   lastLoginAt?: string | null;
+  settings?: UserSettingsDto | null;
 }
 
 export interface UserSettingsDto {
   timezone: string;
   dailyGoalMinutes: number;
   theme: string;
+}
+
+export interface StreakSummaryDto {
+  currentStreak: number;
+  longestStreak: number;
+  lastActiveDate?: string | null;
 }
 
 export interface AuthSessionDto {
