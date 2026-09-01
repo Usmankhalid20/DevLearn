@@ -15,8 +15,13 @@ import {
   Award,
   Settings,
   Flame,
+  LogOut,
+  User,
+  Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/providers/auth-provider';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 
 interface NavItem {
   title: string;
@@ -35,10 +40,13 @@ const navItems: NavItem[] = [
   { title: 'History', href: '/history', icon: History },
   { title: 'Analytics', href: '/analytics', icon: BarChart3 },
   { title: 'Settings', href: '/settings', icon: Settings },
+  { title: 'Profile', href: '/profile', icon: User },
 ];
 
 export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
+  const [showLogoutModal, setShowLogoutModal] = React.useState(false);
 
   return (
     <aside
@@ -84,18 +92,57 @@ export function Sidebar({ className }: { className?: string }) {
             </Link>
           );
         })}
+
+        {user && (user.role === 'ADMIN' || user.role === 'SUPERADMIN') && (
+          <div className="pt-2">
+            <Link
+              href="/admin/overview"
+              className={cn(
+                'flex items-center space-x-3 rounded-md px-3 py-2 text-sm font-medium transition-colors border border-neutral-700 bg-neutral-900/60 text-neutral-200 hover:text-white hover:bg-neutral-800'
+              )}
+            >
+              <Shield className="h-4 w-4 shrink-0 text-white" />
+              <span className="font-semibold text-white">Admin Portal</span>
+            </Link>
+          </div>
+        )}
       </div>
 
-      {/* Bottom Summary Bar */}
-      <div className="border-t border-border p-4">
-        <div className="flex items-center justify-between text-xs text-foreground-secondary">
-          <span className="flex items-center gap-1.5 font-mono">
+      {/* Bottom User & Logout Bar */}
+      <div className="border-t border-border p-3 space-y-2">
+        <div className="flex items-center justify-between rounded-md bg-surface-elevated/60 px-3 py-2 text-xs border border-border">
+          <span className="flex items-center gap-1.5 font-mono text-foreground-secondary text-[11px]">
             <Flame className="h-3.5 w-3.5 text-white" />
-            Streak
+            Streak Active
           </span>
-          <span className="font-mono text-white font-semibold">0 days</span>
+          <span className="font-mono text-white text-[11px] truncate max-w-[90px]">
+            {user?.name || user?.email?.split('@')[0] || 'Learner'}
+          </span>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setShowLogoutModal(true)}
+          className="w-full flex items-center justify-center space-x-2 rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-mono text-foreground-secondary hover:bg-state-error/10 hover:text-state-error hover:border-state-error/40 transition-colors"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          <span>Log Out</span>
+        </button>
       </div>
+
+      <ConfirmModal
+        open={showLogoutModal}
+        onOpenChange={setShowLogoutModal}
+        title="Confirm Sign Out"
+        description="Are you sure you want to log out of your DevLearn account?"
+        confirmLabel="Log Out"
+        variant="danger"
+        icon="logout"
+        onConfirm={async () => {
+          setShowLogoutModal(false);
+          await logout();
+        }}
+      />
     </aside>
   );
 }

@@ -18,8 +18,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useAuth } from '@/providers/auth-provider';
-import { ApiError } from '@/lib/api';
-import { Loader2 } from 'lucide-react';
+import { formatErrorMessage } from '@/lib/api';
+import { showToast } from '@/lib/toast';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address').toLowerCase().trim(),
@@ -55,13 +56,12 @@ export default function LoginPage() {
     try {
       setErrorMessage(null);
       await login(data);
+      showToast.success('Signed in successfully! Welcome back.');
       router.push('/dashboard');
     } catch (err) {
-      if (err instanceof ApiError) {
-        setErrorMessage(err.message);
-      } else {
-        setErrorMessage('Failed to sign in. Please check your credentials.');
-      }
+      const message = formatErrorMessage(err);
+      setErrorMessage(message);
+      showToast.error(err);
     }
   };
 
@@ -79,8 +79,9 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-4">
           {errorMessage && (
-            <div className="rounded-md border border-state-error/40 bg-state-error/10 p-3 text-xs text-state-error">
-              {errorMessage}
+            <div className="flex items-center gap-2 rounded-md border border-state-error/40 bg-state-error/10 p-3 text-xs text-state-error">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{errorMessage}</span>
             </div>
           )}
 

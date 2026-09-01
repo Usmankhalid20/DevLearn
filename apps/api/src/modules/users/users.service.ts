@@ -9,21 +9,19 @@ export class UsersService {
   /**
    * Helper to format User model to UserDto
    */
-  private formatUser(user: {
-    id: string;
-    email: string;
-    name: string | null;
-    isEmailVerified: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-  }): UserDto {
+  private formatUser(user: any): UserDto {
     return {
       id: user.id,
       email: user.email,
-      name: user.name,
-      isEmailVerified: user.isEmailVerified,
-      createdAt: user.createdAt.toISOString(),
-      updatedAt: user.updatedAt.toISOString(),
+      name: user.name ?? null,
+      avatarUrl: user.avatarUrl ?? null,
+      role: user.role ?? 'USER',
+      status: user.status ?? 'ACTIVE',
+      permissions: Array.isArray(user.permissions) ? user.permissions : [],
+      isEmailVerified: Boolean(user.isEmailVerified),
+      createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : String(user.createdAt),
+      updatedAt: user.updatedAt instanceof Date ? user.updatedAt.toISOString() : String(user.updatedAt),
+      lastLoginAt: user.lastLoginAt ? (user.lastLoginAt instanceof Date ? user.lastLoginAt.toISOString() : String(user.lastLoginAt)) : null,
     };
   }
 
@@ -70,10 +68,14 @@ export class UsersService {
 
     const { updatedUser, updatedSettings } = await prisma.$transaction(async (tx) => {
       let u = user;
-      if (input.name !== undefined) {
-        u = await tx.user.update({
+      if (input.name !== undefined || input.avatarUrl !== undefined) {
+        const userData: { name?: string; avatarUrl?: string | null } = {};
+        if (input.name !== undefined) userData.name = input.name;
+        if (input.avatarUrl !== undefined) userData.avatarUrl = input.avatarUrl;
+
+        u = await (tx.user as any).update({
           where: { id: userId },
-          data: { name: input.name },
+          data: userData,
           include: { settings: true },
         });
       }

@@ -10,18 +10,37 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ----------------------------------------------------
-// User & Authentication Models
-// ----------------------------------------------------
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+  SUPERADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+  SUSPENDED
+  BANNED
+}
 
 model User {
-  id              String    @id @default(uuid())
-  email           String    @unique
+  id              String      @id @default(uuid())
+  email           String      @unique
   passwordHash    String
   name            String?
-  isEmailVerified Boolean   @default(false)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  avatarUrl       String?
+  role            UserRole    @default(USER)
+  status          UserStatus  @default(ACTIVE)
+  permissions     String[]    @default([])
+  isEmailVerified Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  lastLoginAt     DateTime?
+
+  // Audit Relations
+  performedAuditLogs AuditLog[] @relation("ActorAuditLogs")
+  targetAuditLogs    AuditLog[] @relation("TargetAuditLogs")
 
   // Auth Relations
   sessions            UserSession[]
@@ -39,6 +58,26 @@ model User {
   contributionDays ContributionDay[]
 
   @@map("users")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String
+  targetId  String?
+  action    String
+  ipAddress String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  actor  User  @relation("ActorAuditLogs", fields: [actorId], references: [id], onDelete: Cascade)
+  target User? @relation("TargetAuditLogs", fields: [targetId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@index([targetId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
 }
 
 model UserSession {
@@ -246,4 +285,15 @@ model ContributionDay {
   @@unique([userId, date])
   @@index([userId])
   @@map("contribution_days")
+}
+
+model PlatformSetting {
+  id                      String   @id @default(uuid())
+  allowNewRegistrations   Boolean  @default(true)
+  maintenanceMode         Boolean  @default(false)
+  defaultDailyGoalMinutes Int      @default(60)
+  systemNotification      String?
+  updatedAt               DateTime @updatedAt
+
+  @@map("platform_settings")
 }

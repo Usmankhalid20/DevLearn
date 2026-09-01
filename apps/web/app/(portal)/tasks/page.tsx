@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { TaskDialog } from '@/components/learning/task-dialog';
 import { SubjectFilterBar } from '@/components/learning/subject-filter-bar';
 import { TaskList } from '@/components/tasks/task-list';
@@ -12,6 +13,7 @@ import { learningApi } from '@/lib/learning-api';
 export default function TasksPage() {
   const queryClient = useQueryClient();
   const [taskDialogOpen, setTaskDialogOpen] = React.useState(false);
+  const [deleteTaskId, setDeleteTaskId] = React.useState<string | null>(null);
   const [filterSubjectId, setFilterSubjectId] = React.useState<string | null>(null);
 
   const { data: subjects = [] } = useQuery({
@@ -36,7 +38,10 @@ export default function TasksPage() {
 
   const deleteMutation = useMutation({
     mutationFn: learningApi.deleteTask,
-    onSuccess: handleRefresh,
+    onSuccess: () => {
+      setDeleteTaskId(null);
+      handleRefresh();
+    },
   });
 
   const handleToggle = async (id: string) => {
@@ -44,9 +49,7 @@ export default function TasksPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Delete this task?')) {
-      await deleteMutation.mutateAsync(id);
-    }
+    setDeleteTaskId(id);
   };
 
   return (
@@ -94,6 +97,25 @@ export default function TasksPage() {
         onOpenChange={setTaskDialogOpen}
         subjects={subjects}
         onSuccess={handleRefresh}
+      />
+
+      {/* Delete Task Modal */}
+      <ConfirmModal
+        open={Boolean(deleteTaskId)}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTaskId(null);
+        }}
+        title="Delete Task"
+        description="Are you sure you want to delete this study task? This action cannot be undone."
+        confirmLabel="Delete Task"
+        variant="danger"
+        icon="delete"
+        isLoading={deleteMutation.isPending}
+        onConfirm={async () => {
+          if (deleteTaskId) {
+            await deleteMutation.mutateAsync(deleteTaskId);
+          }
+        }}
       />
     </div>
   );

@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { GraduationCap, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { CourseDialog } from '@/components/courses/course-dialog';
 import { CourseCard } from '@/components/courses/course-card';
 import { coursesApi, type Course } from '@/lib/courses-api';
@@ -13,6 +14,7 @@ import { learningApi } from '@/lib/learning-api';
 export default function CoursesPage() {
   const queryClient = useQueryClient();
   const [courseDialogOpen, setCourseDialogOpen] = React.useState(false);
+  const [deleteCourseId, setDeleteCourseId] = React.useState<string | null>(null);
 
   const { data: subjects = [] } = useQuery({
     queryKey: ['subjects'],
@@ -39,10 +41,7 @@ export default function CoursesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Delete this course track?')) {
-      await coursesApi.deleteCourse(id);
-      handleRefresh();
-    }
+    setDeleteCourseId(id);
   };
 
   return (
@@ -111,6 +110,26 @@ export default function CoursesPage() {
         onOpenChange={setCourseDialogOpen}
         subjects={subjects}
         onSuccess={handleRefresh}
+      />
+
+      {/* Delete Course Modal */}
+      <ConfirmModal
+        open={Boolean(deleteCourseId)}
+        onOpenChange={(open) => {
+          if (!open) setDeleteCourseId(null);
+        }}
+        title="Delete Course Track"
+        description="Are you sure you want to delete this course track? Recorded curriculum milestones will be removed."
+        confirmLabel="Delete Track"
+        variant="danger"
+        icon="delete"
+        onConfirm={async () => {
+          if (deleteCourseId) {
+            await coursesApi.deleteCourse(deleteCourseId);
+            setDeleteCourseId(null);
+            handleRefresh();
+          }
+        }}
       />
     </div>
   );

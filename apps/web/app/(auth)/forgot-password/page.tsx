@@ -17,8 +17,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { authApi } from '@/lib/auth';
-import { ApiError } from '@/lib/api';
-import { Loader2, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { formatErrorMessage } from '@/lib/api';
+import { showToast } from '@/lib/toast';
+import { Loader2, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Please enter a valid email address').toLowerCase().trim(),
@@ -44,12 +45,11 @@ export default function ForgotPasswordPage() {
       setErrorMessage(null);
       await authApi.forgotPassword(data.email);
       setIsSuccess(true);
+      showToast.success('Password reset instructions sent to your email.');
     } catch (err) {
-      if (err instanceof ApiError) {
-        setErrorMessage(err.message);
-      } else {
-        setErrorMessage('Failed to send reset link. Please try again.');
-      }
+      const message = formatErrorMessage(err);
+      setErrorMessage(message);
+      showToast.error(err);
     }
   };
 
@@ -84,8 +84,9 @@ export default function ForgotPasswordPage() {
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">
             {errorMessage && (
-              <div className="rounded-md border border-state-error/40 bg-state-error/10 p-3 text-xs text-state-error">
-                {errorMessage}
+              <div className="flex items-center gap-2 rounded-md border border-state-error/40 bg-state-error/10 p-3 text-xs text-state-error">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{errorMessage}</span>
               </div>
             )}
 

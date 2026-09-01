@@ -18,8 +18,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { authApi } from '@/lib/auth';
-import { ApiError } from '@/lib/api';
-import { Loader2, CheckCircle2 } from 'lucide-react';
+import { formatErrorMessage } from '@/lib/api';
+import { showToast } from '@/lib/toast';
+import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 
 const resetPasswordSchema = z
   .object({
@@ -52,7 +53,9 @@ function ResetPasswordForm() {
 
   const onSubmit = async (data: ResetPasswordFormData) => {
     if (!token) {
-      setErrorMessage('Missing reset token. Please request a new link.');
+      const msg = 'Missing reset token. Please request a new link.';
+      setErrorMessage(msg);
+      showToast.error(msg);
       return;
     }
 
@@ -60,12 +63,11 @@ function ResetPasswordForm() {
       setErrorMessage(null);
       await authApi.resetPassword(token, data.password);
       setIsSuccess(true);
+      showToast.success('Password updated successfully! You can now log in.');
     } catch (err) {
-      if (err instanceof ApiError) {
-        setErrorMessage(err.message);
-      } else {
-        setErrorMessage('Failed to reset password. The link may have expired.');
-      }
+      const message = formatErrorMessage(err);
+      setErrorMessage(message);
+      showToast.error(err);
     }
   };
 
@@ -106,8 +108,9 @@ function ResetPasswordForm() {
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-4">
           {errorMessage && (
-            <div className="rounded-md border border-state-error/40 bg-state-error/10 p-3 text-xs text-state-error">
-              {errorMessage}
+            <div className="flex items-center gap-2 rounded-md border border-state-error/40 bg-state-error/10 p-3 text-xs text-state-error">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{errorMessage}</span>
             </div>
           )}
 

@@ -23,6 +23,7 @@ import { exportRouter } from './modules/export/export.routes.js';
 import { coursesRouter } from './modules/courses/courses.routes.js';
 import { achievementsRouter } from './modules/achievements/achievements.routes.js';
 import { diagnosticsRouter } from './modules/diagnostics/diagnostics.routes.js';
+import { adminRouter } from './modules/admin/admin.routes.js';
 
 export function createApp() {
   const app = express();
@@ -79,6 +80,7 @@ export function createApp() {
   apiRouter.use('/settings', settingsRouter);
   apiRouter.use('/goals', goalsRouter);
   apiRouter.use('/export', exportRouter);
+  apiRouter.use('/admin', adminRouter);
 
   // Mount API router under /api/v1 (primary versioned), /api (compatibility), and root
   app.use('/api/v1', apiRouter);
