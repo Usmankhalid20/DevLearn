@@ -28,6 +28,7 @@ import {
 import { usePermissions } from '@/hooks/use-permissions';
 
 export default function AdminActivityPage() {
+  console.log('[DevLearn] AdminActivityPage loaded');
   const { can } = usePermissions();
   const [page, setPage] = React.useState(1);
   const [search, setSearch] = React.useState('');
