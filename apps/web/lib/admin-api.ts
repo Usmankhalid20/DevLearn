@@ -46,6 +46,7 @@ export interface LearningActivityQueryParams {
   limit?: number;
   userId?: string;
   subjectId?: string;
+  search?: string;
 }
 
 export interface ResourcesQueryParams {
@@ -188,6 +189,7 @@ export const adminApi = {
     if (params.limit) searchParams.set('limit', String(params.limit));
     if (params.userId) searchParams.set('userId', params.userId);
     if (params.subjectId) searchParams.set('subjectId', params.subjectId);
+    if (params.search) searchParams.set('search', params.search);
 
     const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
     return apiClient<AdminLearningActivityResponseDto>(`/api/v1/admin/activity${query}`);

@@ -747,12 +747,20 @@ export class AdminService {
    * High-level Platform Learning Activity Oversight
    */
   async getLearningActivities(query: LearningActivityQueryInput): Promise<AdminLearningActivityResponseDto> {
-    const { page, limit, userId, subjectId } = query;
+    const { page, limit, userId, subjectId, search } = query;
     const skip = (page - 1) * limit;
 
     const where: any = {};
     if (userId) where.userId = userId;
     if (subjectId) where.subjectId = subjectId;
+    if (search && search.trim().length > 0) {
+      const term = search.trim();
+      where.OR = [
+        { user: { name: { contains: term, mode: 'insensitive' } } },
+        { user: { email: { contains: term, mode: 'insensitive' } } },
+        { subject: { name: { contains: term, mode: 'insensitive' } } },
+      ];
+    }
 
     const [totalCount, sessions] = await Promise.all([
       prisma.learningSession.count({ where }),
