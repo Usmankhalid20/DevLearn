@@ -77,6 +77,7 @@ export const learningActivityQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).default(20),
   userId: z.string().uuid().optional(),
   subjectId: z.string().uuid().optional(),
+  search: z.string().optional(),
 });
 
 export type LearningActivityQueryInput = z.infer<typeof learningActivityQuerySchema>;
